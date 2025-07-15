@@ -1,0 +1,36 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.env
+.env.*
+
+# VSCode
+.vscode/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Playwright
+/test-results/
+/playwright-report/
+
+# 로그/임시
+*.log
+*.tmp
+
+# 기타
+.idea/
+*.swp
+requirements/
+
+# 빌드 산출물
+/dist/
+/build/
+
+# 백업/임시 파일
+*~
+#*#

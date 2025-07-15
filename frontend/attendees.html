@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>참가자 관리 - QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="navigation"></div>
+    
+    <div class="container">
+        <h1>참가자 관리</h1>
+        
+        <!-- 체크인 현황 -->
+        <div class="stats-container">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">전체</div>
+                    <div class="stat-value" id="totalAttendees">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">체크인</div>
+                    <div class="stat-value" id="checkedIn">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">미체크인</div>
+                    <div class="stat-value" id="notCheckedIn">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">체크인율</div>
+                    <div class="stat-value" id="checkedInPercentage">-</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 파일 관리 -->
+        <div class="file-actions">
+            <button class="btn btn-primary" onclick="api.downloadCSV()">CSV 다운로드</button>
+            <div class="file-input-wrapper">
+                <input type="file" id="csvFile" accept=".csv">
+                <label for="csvFile" class="file-input-label">CSV 업로드</label>
+            </div>
+        </div>
+        
+        <!-- 검색 및 필터 -->
+        <div class="search-filter-section">
+            <input type="text" 
+                   class="search-box" 
+                   id="searchBox"
+                   placeholder="이름, 회사명, 등록번호로 검색...">
+            
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">전체</button>
+                <button class="filter-btn" data-filter="checked">체크인 완료</button>
+                <button class="filter-btn" data-filter="unchecked">미체크인</button>
+            </div>
+        </div>
+        
+        <!-- 참가자 테이블 -->
+        <div class="attendees-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>등록번호</th>
+                        <th>이름</th>
+                        <th>회사명</th>
+                        <th>연락처</th>
+                        <th>이메일</th>
+                        <th>유형</th>
+                        <th>체크인 시간</th>
+                        <th>체크인</th>
+                    </tr>
+                </thead>
+                <tbody id="attendeesTableBody">
+                    <!-- 참가자 목록이 여기에 동적으로 추가됨 -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script src="js/attendees.js"></script>
+    <script>
+        // 네비게이션 추가
+        document.getElementById('navigation').appendChild(createNavigation('attendees'));
+    </script>
+</body>
+</html>

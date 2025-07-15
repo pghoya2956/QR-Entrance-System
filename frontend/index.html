@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="js/audio-feedback.js"></script>
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="navigation"></div>
+    
+    <div class="container">
+        <h1>QR 입장 관리 시스템</h1>
+        
+        <!-- 체크인 현황 -->
+        <div class="stats-container">
+            <div class="stats">
+                <div class="stat-item">
+                    <div class="stat-label">전체</div>
+                    <div class="stat-value" id="totalAttendees">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">체크인</div>
+                    <div class="stat-value" id="checkedIn">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">미체크인</div>
+                    <div class="stat-value" id="notCheckedIn">-</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">체크인율</div>
+                    <div class="stat-value" id="checkedInPercentage">-</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- QR 스캐너 섹션 -->
+            <div class="scanner-section">
+                <h2>QR 스캐너</h2>
+                <div id="reader">
+                    <div class="scanner-frame" id="scannerFrame"></div>
+                </div>
+                <div id="status">카메라 준비 중...</div>
+                <div id="resultDisplay" class="result-display"></div>
+            </div>
+
+            <!-- 참석자 목록 섹션 -->
+            <div class="attendees-section">
+                <h2>참석자 목록</h2>
+                <div id="attendeesList" class="attendees-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let html5QrCode = null;
+        let isScanning = false;
+        const recentScans = new Map();
+        const SCAN_COOLDOWN = 3000;
+
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats');
+                const stats = await response.json();
+                
+                document.getElementById('totalAttendees').textContent = stats.total;
+                document.getElementById('checkedIn').textContent = stats.checkedIn;
+                document.getElementById('notCheckedIn').textContent = stats.notCheckedIn;
+                document.getElementById('checkedInPercentage').textContent = stats.checkedInPercentage + '%';
+            } catch (error) {
+                console.error('통계 로딩 실패:', error);
+            }
+        }
+
+        // 참석자 목록 로드
+        async function loadAttendees() {
+            try {
+                const response = await fetch('/api/admin/attendees');
+                const attendees = await response.json();
+                
+                const attendeesList = document.getElementById('attendeesList');
+                attendeesList.innerHTML = '';
+                
+                attendees.forEach(attendee => {
+                    const item = document.createElement('div');
+                    item.className = 'attendee-item';
+                    const checkedInClass = attendee['체크인'] === 'true' ? 'checked-in' : 'not-checked-in';
+                    item.innerHTML = `
+                        <div class="attendee-info">
+                            <strong>${attendee['고객명']}</strong> (${attendee['등록번호']})
+                            <br><small>${attendee['회사명']} | ${attendee['연락처']}</small>
+                            <br><small class="attendee-type">${attendee['초대/현장방문']}</small>
+                        </div>
+                        <div class="${checkedInClass}">
+                            ${attendee['체크인'] === 'true' ? '✓' : '○'}
+                        </div>
+                    `;
+                    attendeesList.appendChild(item);
+                });
+            } catch (error) {
+                console.error('참석자 목록 로딩 실패:', error);
+            }
+        }
+
+        // 스캐너 프레임 색상 변경
+        function setFrameState(state) {
+            const frame = document.getElementById('scannerFrame');
+            frame.className = 'scanner-frame';
+            if (state) {
+                frame.classList.add(state);
+            }
+        }
+
+        // 결과 표시
+        function showResult(message, type) {
+            const resultDiv = document.getElementById('resultDisplay');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result-display result-${type}`;
+            resultDiv.innerHTML = message;
+            
+            setFrameState(type === 'warning' ? 'detecting' : type);
+            
+            setTimeout(() => {
+                setFrameState('');
+            }, 1000);
+            
+            setTimeout(() => {
+                resultDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        // 체크인 처리
+        async function processCheckin(qrData) {
+            try {
+                setFrameState('detecting');
+                
+                const response = await fetch('/api/checkin/verify', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ qrData })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showResult(`✓ ${result.attendeeInfo.name}님 체크인 완료!<br><small>${result.attendeeInfo.company}</small>`, 'success');
+                    audioFeedback.success();
+                    loadStats();
+                    loadAttendees();
+                } else if (response.status === 409) {
+                    showResult(`⚠ ${result.attendeeInfo.name}님은 이미 체크인됨<br><small>${result.attendeeInfo.company}</small>`, 'warning');
+                    audioFeedback.duplicate();
+                } else {
+                    showResult(`✗ ${result.error}`, 'error');
+                    audioFeedback.error();
+                }
+            } catch (error) {
+                console.error('체크인 오류:', error);
+                showResult('✗ 네트워크 오류', 'error');
+                audioFeedback.networkError();
+            }
+        }
+
+        // QR 스캔 성공 핸들러
+        function onScanSuccess(decodedText, decodedResult) {
+            const lastScan = recentScans.get(decodedText);
+            const now = Date.now();
+            
+            if (lastScan && (now - lastScan) < SCAN_COOLDOWN) {
+                console.log('중복 스캔 무시:', decodedText);
+                return;
+            }
+            
+            console.log('QR 감지:', decodedText);
+            recentScans.set(decodedText, now);
+            
+            for (const [key, time] of recentScans) {
+                if (now - time > SCAN_COOLDOWN * 2) {
+                    recentScans.delete(key);
+                }
+            }
+            
+            processCheckin(decodedText);
+        }
+
+        // QR 스캔 실패 핸들러
+        function onScanFailure(error) {
+            // 스캔 실패는 무시
+        }
+
+        // 스캐너 시작
+        async function startScanning() {
+            try {
+                if (!html5QrCode) {
+                    html5QrCode = new Html5Qrcode("reader");
+                }
+                
+                const config = {
+                    fps: 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    videoConstraints: {
+                        facingMode: "environment",
+                        advanced: [{
+                            // 좌우반전 적용
+                            mirrored: true
+                        }]
+                    }
+                };
+                
+                document.getElementById('status').textContent = '카메라 시작 중...';
+                
+                await html5QrCode.start(
+                    { facingMode: "environment" },
+                    config,
+                    onScanSuccess,
+                    onScanFailure
+                );
+                
+                // 비디오 요소에 좌우반전 CSS 적용
+                const video = document.querySelector('#reader video');
+                if (video) {
+                    video.style.transform = 'scaleX(-1)';
+                }
+                
+                isScanning = true;
+                document.getElementById('status').textContent = 'QR 코드를 스캔하세요';
+                console.log('스캐너 시작됨');
+                
+            } catch (err) {
+                console.error('스캐너 시작 실패:', err);
+                document.getElementById('status').textContent = '카메라를 시작할 수 없습니다';
+                audioFeedback.error();
+            }
+        }
+
+        // 스캐너 중지
+        async function stopScanning() {
+            try {
+                if (html5QrCode && isScanning) {
+                    await html5QrCode.stop();
+                    isScanning = false;
+                    console.log('스캐너 중지됨');
+                }
+            } catch (err) {
+                console.error('스캐너 중지 실패:', err);
+            }
+        }
+
+        // 페이지 로드 시 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            console.log('통합 QR 시스템 시작');
+            
+            // 오디오 초기화를 위한 첫 클릭 이벤트
+            document.addEventListener('click', () => {
+                audioFeedback.init();
+            }, { once: true });
+            
+            // 초기 데이터 로드
+            loadStats();
+            loadAttendees();
+            
+            // 자동으로 스캐너 시작
+            startScanning();
+            
+            // 5초마다 통계 업데이트
+            setInterval(loadStats, 5000);
+        });
+
+        // 페이지 종료 시 정리
+        window.addEventListener('beforeunload', () => {
+            stopScanning();
+        });
+
+        // 페이지 숨김/표시 처리
+        document.addEventListener('visibilitychange', () => {
+            if (document.hidden && isScanning) {
+                stopScanning();
+            } else if (!document.hidden && !isScanning) {
+                startScanning();
+            }
+        });
+        
+        // 네비게이션 추가
+        document.getElementById('navigation').appendChild(createNavigation('home'));
+    </script>
+</body>
+</html>

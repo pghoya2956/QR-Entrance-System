@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR 스캐너 - QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="js/audio-feedback.js"></script>
+    <script src="js/common.js"></script>
+</head>
+<body>
+    <div id="navigation"></div>
+    
+    <div class="scanner-container-full">
+        <h1>QR 스캐너</h1>
+        
+        <div id="reader">
+            <div class="scanner-frame" id="scannerFrame"></div>
+        </div>
+        
+        <div id="status">카메라 준비 중...</div>
+        
+        <div id="resultDisplay" class="result-display"></div>
+        
+        <div class="actions" style="margin-top: 30px;">
+            <button id="toggleCamera" class="btn btn-secondary">카메라 중지</button>
+        </div>
+    </div>
+
+    <script src="js/scanner.js"></script>
+    <script>
+        // 네비게이션 추가
+        document.getElementById('navigation').appendChild(createNavigation('scanner'));
+    </script>
+</body>
+</html>
