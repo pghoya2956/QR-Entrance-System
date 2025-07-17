@@ -139,6 +139,7 @@ sequenceDiagram
 ## 최근 개선사항 (2025-07-17)
 
 ### 구현 완료
+- ✅ **QR 코드 생성 API**: `/api/qr/generate/:registrationNumber` 엔드포인트 구현 완료
 - ✅ **QR 코드 생성 UI**: 모달 팝업, 다운로드 기능
 - ✅ **체크인 토글**: 전역 함수 노출로 onclick 이벤트 해결
 - ✅ **이벤트 전환**: 페이지별 차별화된 새로고침 전략
@@ -147,10 +148,15 @@ sequenceDiagram
 ### 테스트 현황
 - **총 57개 중 36개 통과 (63.2%)**
 - **주요 실패 원인**:
-  1. QR 생성 API 미구현 (`/api/qr/generate`)
-  2. 테스트 데이터 격리 문제 (CSV 공유)
-  3. 이벤트 전환 동작 불일치
-  4. 보안 테스트 응답 코드 차이 (401 vs 400)
+  1. 테스트 데이터 격리 문제 (CSV 공유)
+  2. 이벤트 전환 동작 불일치
+  3. 보안 테스트 응답 코드 차이 (401 vs 400)
+  4. Frontend 컨테이너 health check 실패
+
+### 알려진 이슈
+- **Frontend 컨테이너 unhealthy 상태**: Nginx health check 실패
+- **백엔드 자동 선택 실패**: frontend/js 파일 로딩 순서 문제로 간헐적 실패
+- **테스트 데이터 격리**: 여러 테스트가 동일한 CSV 파일 공유로 상호 간섭
 
 ## 주의사항
 
@@ -232,6 +238,7 @@ docker-compose -f docker-compose.dev.yml logs -f backend-event1-dev
 
 ## 향후 작업
 
-1. **필수 구현**: QR 생성 API (`/api/qr/generate`)
-2. **테스트 개선**: 데이터 격리, beforeEach 초기화
-3. **보안 강화**: Rate limiting, 입력값 검증
+1. **테스트 개선**: 데이터 격리, beforeEach 초기화
+2. **보안 강화**: Rate limiting, 입력값 검증
+3. **Frontend health check 수정**: Nginx 설정 개선
+4. **백엔드 디스커버리 안정화**: JS 로딩 순서 보장

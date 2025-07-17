@@ -100,7 +100,7 @@ npx playwright show-report
 #### 테스트 상태 (2025-07-17 기준)
 - **총 테스트**: 57개
 - **통과**: 36개 (63.2%)
-- **실패**: 17개 (주로 미구현 API 및 테스트 데이터 격리 문제)
+- **실패**: 17개 (주로 테스트 데이터 격리 문제 및 백엔드 디스커버리 불안정)
 - **스킵**: 4개
 
 ## 사용 방법
@@ -214,8 +214,8 @@ docker-compose logs -f [서비스명]
 - `GET /api/info` - 백엔드 이벤트 정보 조회
 
 ### QR 코드 관련
+- `GET /api/qr/generate/:registrationNumber` - 특정 참석자 QR 코드 생성
 - `POST /api/qr/generate` - QR 코드 생성 (미구현)
-- `GET /api/qr/generate/:registrationNumber` - 특정 참석자 QR 코드 생성 (미구현)
 - `GET /api/qr/generate-all` - 전체 참석자 QR 코드 생성 (미구현)
 
 ### 체크인 관련
@@ -238,13 +238,15 @@ qr-entrance-system/
 │   └── src/
 │       ├── server.js          # Express 서버
 │       ├── routes/            # API 라우트
-│       │   ├── qr.js
-│       │   ├── checkin.js
-│       │   └── admin.js
+│       │   ├── qr.js          # QR 생성 엔드포인트
+│       │   ├── checkin.js     # 체크인 처리
+│       │   └── admin.js       # 관리자 기능
 │       ├── services/          # 비즈니스 로직
-│       │   ├── csvService.js
-│       │   └── qrService.js
+│       │   ├── csvService.js  # CSV 파일 처리
+│       │   └── qrService.js   # QR 코드 생성/검증
 │       └── data/              # 이벤트별 데이터 디렉토리
+│           ├── default-event/
+│           │   └── attendees.csv
 │           ├── tech-conference-2025/
 │           │   └── attendees.csv
 │           └── startup-meetup-2025/
@@ -388,13 +390,15 @@ QR 코드는 다음 형식으로 생성됩니다:
 ## 최근 개선사항 (2025-07-17)
 
 ### 구현 완료 기능
+- ✅ **QR 코드 생성 API**: `/api/qr/generate/:registrationNumber` 엔드포인트 구현
 - ✅ **QR 코드 생성 UI**: 참석자별 QR 생성 버튼, 모달 팝업, 다운로드 기능
 - ✅ **체크인 토글 기능**: 참석자 목록에서 체크인 상태를 클릭하여 변경
 - ✅ **이벤트 전환 개선**: 페이지 새로고침 없이 데이터만 로드 (attendees.html, index.html)
 - ✅ **스캐너 초기화 개선**: 백엔드 연결 완료 후 UI 활성화
 
 ### 알려진 이슈
-- QR 생성 API (`/api/qr/generate`) 미구현 - 현재 UI만 구현됨
+- Frontend 컨테이너 health check 실패 (unhealthy 상태)
+- 백엔드 자동 선택 간헐적 실패 (JS 로딩 순서 문제)
 - 테스트 데이터 격리 문제로 일부 테스트 실패
 - 이벤트 전환 시 스캐너 페이지는 여전히 페이지 새로고침 필요
 
@@ -403,7 +407,10 @@ QR 코드는 다음 형식으로 생성됩니다:
 - [x] 멀티 이벤트 지원 (v2.0 완료)
 - [x] 유연한 CSV 형식 (v2.0 완료)
 - [x] QR 코드 생성 UI (v2.1 완료)
-- [ ] QR 코드 생성 API 구현
+- [x] QR 코드 생성 API 구현 (v2.1 완료)
+- [ ] Frontend health check 수정
+- [ ] 백엔드 디스커버리 안정화
+- [ ] 테스트 데이터 격리 개선
 - [ ] Google Sheets 연동
 - [ ] 이메일 자동 발송 기능
 - [ ] 실시간 동기화 (WebSocket)

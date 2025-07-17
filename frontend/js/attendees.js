@@ -154,12 +154,27 @@ window.addEventListener('DOMContentLoaded', () => {
     // CSV 업로드 이벤트 리스너
     document.getElementById('csvFile').addEventListener('change', handleCSVUpload);
     
-    // 초기 데이터 로드
-    loadStats();
-    loadAttendees();
-    
-    // 5초마다 통계 업데이트
-    setInterval(loadStats, 5000);
+    // 백엔드 초기화 완료 후 데이터 로드
+    if (window.initializeBackends) {
+        window.initializeBackends().then(success => {
+            if (success) {
+                loadStats();
+                loadAttendees();
+                
+                // 5초마다 통계 업데이트
+                setInterval(loadStats, 5000);
+            }
+        });
+    } else {
+        // fallback: 백엔드 초기화 대기
+        setTimeout(() => {
+            loadStats();
+            loadAttendees();
+            
+            // 5초마다 통계 업데이트
+            setInterval(loadStats, 5000);
+        }, 1000);
+    }
 });
 
 // QR 코드 관련 변수
