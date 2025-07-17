@@ -16,9 +16,8 @@ async function discoverBackends() {
     
     for (let port = startPort; port <= endPort; port++) {
         try {
-            const response = await fetch(`http://localhost:${port}/api/info`, {
+            const response = await fetch(`/backend/${port}/api/info`, {
                 method: 'GET',
-                mode: 'cors',
                 signal: AbortSignal.timeout(1000) // 1초 타임아웃
             });
             
@@ -26,13 +25,13 @@ async function discoverBackends() {
                 const info = await response.json();
                 backends.push({
                     ...info,
-                    baseUrl: `http://localhost:${port}`
+                    baseUrl: `/backend/${port}`
                 });
                 console.log(`✅ 발견: ${info.eventName} (포트 ${port})`);
             }
         } catch (error) {
             // 연결 실패는 무시 (해당 포트에 백엔드 없음)
-            console.log(`❌ 포트 ${port} 연결 실패 (타임아웃)`);
+            console.log(`❌ 포트 ${port} 연결 실패`);
         }
     }
     
@@ -113,6 +112,11 @@ const api = {
             return await response.json();
         } catch (error) {
             console.error('Error fetching attendees:', error);
+            if (error.message.includes('백엔드가 선택되지 않았습니다')) {
+                showToast('이벤트를 먼저 선택해주세요.', 'error');
+            } else {
+                showToast('참가자 목록을 불러올 수 없습니다. 백엔드 서버 연결을 확인해주세요.', 'error');
+            }
             throw error;
         }
     },
@@ -125,6 +129,11 @@ const api = {
             return await response.json();
         } catch (error) {
             console.error('Error fetching stats:', error);
+            if (error.message.includes('백엔드가 선택되지 않았습니다')) {
+                showToast('이벤트를 먼저 선택해주세요.', 'error');
+            } else {
+                showToast('통계 정보를 불러올 수 없습니다. 백엔드 서버 연결을 확인해주세요.', 'error');
+            }
             throw error;
         }
     },
