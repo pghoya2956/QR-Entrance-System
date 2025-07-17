@@ -14,20 +14,26 @@ router.post('/verify', async (req, res) => {
     // QR 데이터에서 등록번호 추출
     let registrationNumber;
     
-    // 형식 1: CHECKIN:1002
-    let match = qrData.match(/^CHECKIN:(\d+)$/);
+    // 형식 1: CHECKIN:REG001 또는 CHECKIN:STU001 등
+    let match = qrData.match(/^CHECKIN:([A-Z0-9]+)$/);
     if (match) {
       registrationNumber = match[1];
     } else {
-      // 형식 2: 이영희 1002 (이름과 번호)
-      match = qrData.match(/(\d{4})$/);
+      // 형식 2: REG001:김철수 (등록번호:이름)
+      match = qrData.match(/^([A-Z0-9]+):(.+)$/);
       if (match) {
         registrationNumber = match[1];
       } else {
-        return res.status(401).json({ 
-          error: '유효하지 않은 QR 코드입니다.',
-          details: 'QR 코드 형식이 올바르지 않습니다.' 
-        });
+        // 형식 3: 이름 번호 (이름과 4자리 숫자)
+        match = qrData.match(/(\d{4})$/);
+        if (match) {
+          registrationNumber = match[1];
+        } else {
+          return res.status(401).json({ 
+            error: '유효하지 않은 QR 코드입니다.',
+            details: 'QR 코드 형식이 올바르지 않습니다.' 
+          });
+        }
       }
     }
     const attendee = await csvService.getAttendeeByRegistrationNumber(registrationNumber);
@@ -83,15 +89,21 @@ router.post('/batch', async (req, res) => {
       const { qrData, timestamp } = checkIn;
       let registrationNumber;
       
-      // 형식 1: CHECKIN:1002
-      let match = qrData.match(/^CHECKIN:(\d+)$/);
+      // 형식 1: CHECKIN:REG001 또는 CHECKIN:STU001 등
+      let match = qrData.match(/^CHECKIN:([A-Z0-9]+)$/);
       if (match) {
         registrationNumber = match[1];
       } else {
-        // 형식 2: 이름 번호 (이름과 번호)
-        match = qrData.match(/(\d{4})$/);
+        // 형식 2: REG001:김철수 (등록번호:이름)
+        match = qrData.match(/^([A-Z0-9]+):(.+)$/);
         if (match) {
           registrationNumber = match[1];
+        } else {
+          // 형식 3: 이름 번호 (이름과 4자리 숫자)
+          match = qrData.match(/(\d{4})$/);
+          if (match) {
+            registrationNumber = match[1];
+          }
         }
       }
       

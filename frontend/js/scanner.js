@@ -89,6 +89,13 @@ function onScanFailure(error) {
 // 스캐너 시작
 async function startScanning() {
     try {
+        // 백엔드 연결 확인
+        if (!currentBackend) {
+            document.getElementById('status').textContent = '백엔드가 선택되지 않았습니다';
+            audioFeedback.error();
+            return;
+        }
+        
         if (!html5QrCode) {
             html5QrCode = new Html5Qrcode("reader");
         }
@@ -156,20 +163,54 @@ function toggleCamera() {
     }
 }
 
+// 백엔드 초기화 대기 함수
+async function waitForBackendInitialization() {
+    // 백엔드 초기화가 완료될 때까지 대기
+    let retries = 0;
+    const maxRetries = 10;
+    
+    while (!currentBackend && retries < maxRetries) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        retries++;
+    }
+    
+    return currentBackend !== null;
+}
+
 // 페이지 로드 시 초기화
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
     console.log('QR 스캐너 전용 페이지 시작');
+    
+    // 초기 상태 설정 - UI 비활성화
+    const toggleBtn = document.getElementById('toggleCamera');
+    const statusDiv = document.getElementById('status');
+    
+    toggleBtn.disabled = true;
+    statusDiv.textContent = '백엔드 연결 중...';
     
     // 오디오 초기화를 위한 첫 클릭 이벤트
     document.addEventListener('click', () => {
         audioFeedback.init();
     }, { once: true });
     
-    // 카메라 토글 버튼 이벤트
-    document.getElementById('toggleCamera').addEventListener('click', toggleCamera);
+    // 백엔드 초기화 대기
+    const backendReady = await waitForBackendInitialization();
     
-    // 자동으로 스캐너 시작
-    startScanning();
+    if (backendReady) {
+        // 백엔드 연결 성공 - UI 활성화
+        toggleBtn.disabled = false;
+        statusDiv.textContent = '카메라 준비 중...';
+        
+        // 카메라 토글 버튼 이벤트
+        toggleBtn.addEventListener('click', toggleCamera);
+        
+        // 자동으로 스캐너 시작
+        startScanning();
+    } else {
+        // 백엔드 연결 실패
+        statusDiv.textContent = '백엔드 연결 실패 - 페이지를 새로고침하세요';
+        setFrameState('error');
+    }
 });
 
 // 페이지 종료 시 정리

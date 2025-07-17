@@ -599,3 +599,120 @@ h1 {
         min-width: 600px;
     }
 }
+
+/* 이벤트 선택기 스타일 */
+.event-selector {
+    background-color: #f8f9fa;
+    border-bottom: 2px solid #e0e0e0;
+    padding: 15px 0;
+    position: sticky;
+    top: 0;
+    z-index: 999;
+}
+
+.event-selector-header {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.event-select {
+    padding: 8px 15px;
+    border: 2px solid #3498db;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 500;
+    background: white;
+    cursor: pointer;
+    min-width: 250px;
+}
+
+.event-select:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+.btn-sm {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+/* 모달 스타일 */
+.modal {
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+}
+
+.modal-content {
+    background-color: #fefefe;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+}
+
+.modal-header h2 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.modal-close {
+    color: #aaa;
+    font-size: 28px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 20px;
+    transition: color 0.3s;
+}
+
+.modal-close:hover,
+.modal-close:focus {
+    color: #000;
+}
+
+.modal-body {
+    padding: 20px;
+    text-align: center;
+}
+
+.qr-code-container {
+    margin: 20px 0;
+}
+
+.qr-code-container img {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    background: white;
+}
+
+/* QR 생성 버튼 스타일 */
+.btn-generate-qr {
+    background-color: #9b59b6;
+    color: white;
+}
+
+.btn-generate-qr:hover {
+    background-color: #8e44ad;
+}

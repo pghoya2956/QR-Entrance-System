@@ -10,6 +10,7 @@
     <script src="js/common.js"></script>
 </head>
 <body>
+    <div id="eventSelector"></div>
     <div id="navigation"></div>
     
     <div class="scanner-container-full">
@@ -30,8 +31,30 @@
 
     <script src="js/scanner.js"></script>
     <script>
-        // 네비게이션 추가
-        document.getElementById('navigation').appendChild(createNavigation('scanner'));
+        // 페이지 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 이벤트 선택기 추가
+            const eventSelectorDiv = document.getElementById('eventSelector');
+            if (eventSelectorDiv) {
+                eventSelectorDiv.appendChild(createEventSelector());
+            }
+            
+            // 백엔드 초기화
+            const backendReady = await initializeBackends();
+            if (!backendReady) {
+                document.getElementById('status').textContent = '백엔드 연결 실패';
+                return;
+            }
+            
+            // 새로고침 버튼 이벤트
+            document.getElementById('refreshBackends')?.addEventListener('click', async () => {
+                await initializeBackends();
+                showToast('백엔드 목록을 새로고침했습니다.', 'info');
+            });
+            
+            // 네비게이션 추가
+            document.getElementById('navigation').appendChild(createNavigation('scanner'));
+        });
     </script>
 </body>
 </html>

@@ -10,6 +10,7 @@ QR 코드를 활용한 행사 참석자 입장 관리 웹 애플리케이션입�
 - 📊 **실시간 통계**: 체크인 현황 실시간 모니터링
 - 🔄 **오프라인 지원**: 네트워크 연결이 없어도 체크인 가능 (추후 동기화)
 - 👥 **다중 스태프 지원**: 여러 디바이스에서 동시 체크인 처리
+- 🎉 **멀티 이벤트 지원**: 여러 행사를 독립적으로 관리 (v2.0 신규)
 
 ## 기술 스택
 
@@ -53,7 +54,7 @@ npx playwright install chromium
 
 ## 실행 방법
 
-### 개발 서버 실행
+### 단일 이벤트 모드 (기존 방식)
 ```bash
 npm start
 # 또는
@@ -62,10 +63,45 @@ npm run dev  # nodemon 사용
 
 브라우저에서 `http://localhost:3000` 접속
 
+### 멀티 이벤트 모드 (Docker Compose)
+
+#### 프로덕션 환경
+```bash
+./scripts/start-prod.sh
+```
+
+#### 개발 환경
+```bash
+./scripts/start-dev.sh
+```
+
 ### 테스트 실행
+
+#### 전체 테스트 실행
 ```bash
 npm test
 ```
+
+#### 특정 테스트 파일 실행
+```bash
+npx playwright test tests/e2e/checkin/duplicate-checkin.spec.js
+```
+
+#### UI 모드로 테스트 실행 (디버깅용)
+```bash
+npx playwright test --ui
+```
+
+#### 테스트 리포트 보기
+```bash
+npx playwright show-report
+```
+
+#### 테스트 상태 (2025-07-16 기준)
+- **총 테스트**: 57개
+- **통과**: 38개 (66.7%)
+- **실패**: 15개 (주로 미구현 기능)
+- **스킵**: 4개 (QR 코드 생성 UI)
 
 ## 사용 방법
 
@@ -88,7 +124,93 @@ npm test
 - 오프라인 대기열에 저장
 - 인터넷 연결 시 "동기화" 버튼으로 일괄 처리
 
+## 🎉 멀티 이벤트 시스템 (v2.0)
+
+### 개요
+하나의 프론트엔드에서 여러 개의 독립적인 백엔드를 선택하여 사용할 수 있는 멀티 이벤트 시스템입니다. 각 이벤트는 독립적인 Docker 컨테이너로 실행되며, 고유한 CSV 형식과 데이터를 가질 수 있습니다.
+
+### 주요 특징
+- **독립적인 이벤트 관리**: 각 이벤트는 별도의 백엔드 컨테이너로 실행
+- **유연한 CSV 형식**: 이벤트별로 다른 CSV 필드 구성 가능
+- **자동 디스커버리**: 프론트엔드가 활성 백엔드를 자동으로 감지
+- **무중단 추가**: 기존 이벤트 영향 없이 새 이벤트 추가 가능
+
+### 새 이벤트 추가 방법
+
+#### 1. 스크립트 사용 (권장)
+```bash
+./scripts/add-event.sh
+```
+
+#### 2. 수동 추가
+1. 데이터 디렉토리 생성
+```bash
+mkdir -p backend/src/data/[EVENT_ID]
+```
+
+2. CSV 파일 생성
+```bash
+echo "필드1,필드2,필드3,..." > backend/src/data/[EVENT_ID]/attendees.csv
+```
+
+3. docker-compose.yml에 서비스 추가
+```yaml
+backend-[EVENT_ID]:
+  build:
+    context: .
+    dockerfile: Dockerfile
+  ports:
+    - "[PORT]:[PORT]"
+  environment:
+    - PORT=[PORT]
+    - EVENT_ID=[EVENT_ID]
+    - EVENT_NAME=[이벤트 이름]
+    - CSV_FIELDS=필드1,필드2,필드3,...
+    - CSV_REQUIRED=필수필드1,필수필드2,...
+  volumes:
+    - ./backend/src/data/[EVENT_ID]:/app/backend/src/data/[EVENT_ID]
+  networks:
+    - qr-network
+```
+
+4. 컨테이너 재시작
+```bash
+docker-compose up -d
+```
+
+### 환경 변수 설정
+
+각 백엔드 컨테이너는 다음 환경 변수를 사용합니다:
+
+- `PORT`: 백엔드 서비스 포트 (3001-3010)
+- `EVENT_ID`: 이벤트 고유 식별자
+- `EVENT_NAME`: 이벤트 표시 이름
+- `CSV_FIELDS`: CSV 필드 목록 (쉼표 구분)
+- `CSV_REQUIRED`: 필수 필드 목록 (쉼표 구분)
+- `JWT_SECRET`: JWT 토큰 시크릿 키
+
+### 사용 예시
+
+1. **프로덕션 환경 시작**
+```bash
+./scripts/start-prod.sh
+```
+
+2. **프론트엔드 접속**
+- http://localhost 접속
+- 상단 이벤트 선택기에서 원하는 이벤트 선택
+- 선택한 이벤트의 데이터로 작업 진행
+
+3. **백엔드 상태 확인**
+```bash
+docker-compose ps
+docker-compose logs -f [서비스명]
+```
+
 ## API 엔드포인트
+
+### 이벤트 정보 (v2.0 신규)
+- `GET /api/info` - 백엔드 이벤트 정보 조회
 
 ### QR 코드 관련
 - `GET /api/qr/generate/:registrationNumber` - 특정 참석자 QR 코드 생성
@@ -102,6 +224,8 @@ npm test
 - `GET /api/admin/attendees` - 전체 참석자 목록 조회
 - `GET /api/admin/stats` - 체크인 통계 조회
 - `POST /api/admin/reset` - 체크인 데이터 초기화
+- `GET /api/admin/export-csv` - CSV 파일 다운로드
+- `POST /api/admin/import-csv` - CSV 파일 업로드
 
 ## 프로젝트 구조
 
@@ -117,28 +241,57 @@ qr-entrance-system/
 │       ├── services/          # 비즈니스 로직
 │       │   ├── csvService.js
 │       │   └── qrService.js
-│       └── data/
-│           └── attendees.csv  # 참석자 데이터
+│       └── data/              # 이벤트별 데이터 디렉토리
+│           ├── tech-conference-2025/
+│           │   └── attendees.csv
+│           └── startup-meetup-2025/
+│               └── attendees.csv
 ├── frontend/
 │   ├── index.html            # 메인 대시보드
 │   ├── scanner.html          # QR 스캐너 페이지
+│   ├── attendees.html        # 참석자 관리 페이지
 │   ├── css/
 │   │   └── style.css
 │   └── js/
-│       ├── admin.js
-│       └── scanner.js
+│       ├── common.js         # 공통 유틸리티 및 API
+│       ├── scanner.js        # QR 스캐너 로직
+│       ├── attendees.js      # 참석자 관리 로직
+│       └── audio-feedback.js # 오디오 피드백
+├── scripts/                  # 유틸리티 스크립트
+│   ├── start-dev.sh
+│   ├── start-prod.sh
+│   └── add-event.sh
 ├── tests/
 │   └── qr-checkin.spec.js    # Playwright 테스트
+├── docker-compose.yml        # 프로덕션 구성
+├── docker-compose.dev.yml    # 개발 환경 구성
+├── Dockerfile                # 백엔드 이미지
+├── nginx.conf                # 프론트엔드 서버 설정
 ├── package.json
 ├── playwright.config.js
-└── .env
+├── .env
+├── .env.example
+└── .dockerignore
 ```
 
 ## 데이터 형식
 
 ### CSV 파일 형식 요구사항
 
-이 시스템은 **고정된 CSV 형식**을 사용합니다. CSV 파일은 반드시 아래 형식을 따라야 합니다:
+#### 단일 이벤트 모드 (v1.0)
+단일 이벤트 모드에서는 **고정된 CSV 형식**을 사용합니다. CSV 파일은 반드시 아래 형식을 따라야 합니다:
+
+#### 멀티 이벤트 모드 (v2.0)
+멀티 이벤트 모드에서는 **유연한 CSV 형식**을 지원합니다:
+- 이벤트별로 다른 필드 구성 가능
+- 환경 변수로 필드 정의
+- 필수 필드만 지정하면 나머지는 자유롭게 구성
+
+**필수 식별 필드** (모든 이벤트 공통):
+- 등록번호
+- 고객명
+- 회사명
+- 이메일
 
 #### 필수 헤더 (순서 고정)
 ```
@@ -177,14 +330,56 @@ qr-entrance-system/
 - 중복 체크인 방지
 - CORS 설정으로 외부 접근 제어
 
+## 개발자 가이드
+
+### 테스트 작성 규칙
+1. **공통 헬퍼 함수 사용 필수**
+   ```javascript
+   import { selectBackendAndLoadData, performQRCheckin, selectors } from '../helpers/common.js';
+   ```
+2. **실제 DOM 구조 확인 후 셀렉터 작성**
+   - 올바른 예: `#attendeesTableBody`, `#searchBox`
+   - 잘못된 예: `#attendeesList`, `#searchInput`
+3. **API 응답은 flat 구조 기준**
+   ```javascript
+   // ✓ 올바른 방법
+   expect(stats.checkedIn).toBe(10);
+   
+   // ✗ 잘못된 방법
+   expect(stats.stats.checkedIn).toBe(10);
+   ```
+
+### 디버깅 가이드
+- **테스트 실패 시 체크리스트**:
+  1. 셀렉터가 실제 DOM과 일치하는지 확인
+  2. API 응답 구조가 테스트 기대값과 일치하는지 확인
+  3. 백엔드 초기화 타이밍 문제인지 확인
+  4. 페이지 리로드 후 수동 데이터 로드가 필요한지 확인
+
+- **백엔드 선택 후 데이터 로드**:
+  ```javascript
+  // 백엔드 선택 시 페이지가 리로드되므로 
+  // 명시적으로 데이터 로드 함수 호출 필요
+  await selectBackendAndLoadData(page, '3001', 'attendees');
+  ```
+
+- **일반적인 문제 해결**:
+  - 포트 번호는 문자열로 전달: `'3001'` (숫자 아님)
+  - 체크인 상태는 문자열: `"true"` / `"false"` (boolean 아님)
+  - 이벤트 선택 후 3초 대기 권장 (초기화 완료 대기)
+
 ## 향후 개선사항
 
+- [x] 멀티 이벤트 지원 (v2.0 완료)
+- [x] 유연한 CSV 형식 (v2.0 완료)
 - [ ] Google Sheets 연동
 - [ ] 이메일 자동 발송 기능
 - [ ] 실시간 동기화 (WebSocket)
 - [ ] 다국어 지원
 - [ ] 체크인 위치 정보 기록
 - [ ] 관리자 인증 기능
+- [ ] Kubernetes 배포 지원
+- [ ] 이벤트별 통계 대시보드
 
 ## 라이센스
 

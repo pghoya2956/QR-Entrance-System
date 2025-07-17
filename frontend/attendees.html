@@ -8,6 +8,7 @@
     <script src="js/common.js"></script>
 </head>
 <body>
+    <div id="eventSelector"></div>
     <div id="navigation"></div>
     
     <div class="container">
@@ -71,6 +72,7 @@
                         <th>유형</th>
                         <th>체크인 시간</th>
                         <th>체크인</th>
+                        <th>QR 코드</th>
                     </tr>
                 </thead>
                 <tbody id="attendeesTableBody">
@@ -80,10 +82,46 @@
         </div>
     </div>
 
+    <!-- QR 코드 모달 -->
+    <div id="qrModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="qrModalTitle">QR 코드</h2>
+                <span class="modal-close" onclick="closeQRModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div id="qrCode" class="qr-code-container"></div>
+                <button class="btn btn-primary" onclick="downloadQR()">QR 코드 다운로드</button>
+            </div>
+        </div>
+    </div>
+
     <script src="js/attendees.js"></script>
     <script>
-        // 네비게이션 추가
-        document.getElementById('navigation').appendChild(createNavigation('attendees'));
+        // 페이지 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 이벤트 선택기 추가
+            const eventSelectorDiv = document.getElementById('eventSelector');
+            if (eventSelectorDiv) {
+                eventSelectorDiv.appendChild(createEventSelector());
+            }
+            
+            // 백엔드 초기화
+            const backendReady = await initializeBackends();
+            if (!backendReady) {
+                showToast('백엔드 연결 실패', 'error');
+                return;
+            }
+            
+            // 새로고침 버튼 이벤트
+            document.getElementById('refreshBackends')?.addEventListener('click', async () => {
+                await initializeBackends();
+                showToast('백엔드 목록을 새로고침했습니다.', 'info');
+            });
+            
+            // 네비게이션 추가
+            document.getElementById('navigation').appendChild(createNavigation('attendees'));
+        });
     </script>
 </body>
 </html>

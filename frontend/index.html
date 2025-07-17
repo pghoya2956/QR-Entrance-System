@@ -10,6 +10,7 @@
     <script src="js/common.js"></script>
 </head>
 <body>
+    <div id="eventSelector"></div>
     <div id="navigation"></div>
     
     <div class="container">
@@ -65,7 +66,7 @@
         // 통계 로드
         async function loadStats() {
             try {
-                const response = await fetch('/api/admin/stats');
+                const response = await fetch(getApiUrl('/api/admin/stats'));
                 const stats = await response.json();
                 
                 document.getElementById('totalAttendees').textContent = stats.total;
@@ -80,7 +81,7 @@
         // 참석자 목록 로드
         async function loadAttendees() {
             try {
-                const response = await fetch('/api/admin/attendees');
+                const response = await fetch(getApiUrl('/api/admin/attendees'));
                 const attendees = await response.json();
                 
                 const attendeesList = document.getElementById('attendeesList');
@@ -139,7 +140,7 @@
             try {
                 setFrameState('detecting');
                 
-                const response = await fetch('/api/checkin/verify', {
+                const response = await fetch(getApiUrl('/api/checkin/verify'), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -204,7 +205,7 @@
                 
                 const config = {
                     fps: 10,
-                    qrbox: { width: 250, height: 250 },
+                    qrbox: { width: 350, height: 350 },
                     aspectRatio: 1.0,
                     videoConstraints: {
                         facingMode: "environment",
@@ -255,8 +256,27 @@
         }
 
         // 페이지 로드 시 초기화
-        window.addEventListener('DOMContentLoaded', () => {
+        window.addEventListener('DOMContentLoaded', async () => {
             console.log('통합 QR 시스템 시작');
+            
+            // 이벤트 선택기 추가
+            const eventSelectorDiv = document.getElementById('eventSelector');
+            if (eventSelectorDiv) {
+                eventSelectorDiv.appendChild(createEventSelector());
+            }
+            
+            // 백엔드 초기화
+            const backendReady = await initializeBackends();
+            if (!backendReady) {
+                document.getElementById('status').textContent = '백엔드 연결 실패';
+                return;
+            }
+            
+            // 새로고침 버튼 이벤트
+            document.getElementById('refreshBackends')?.addEventListener('click', async () => {
+                await initializeBackends();
+                showToast('백엔드 목록을 새로고침했습니다.', 'info');
+            });
             
             // 오디오 초기화를 위한 첫 클릭 이벤트
             document.addEventListener('click', () => {

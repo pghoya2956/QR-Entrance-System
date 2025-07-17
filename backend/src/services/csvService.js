@@ -1,21 +1,54 @@
 const fs = require('fs').promises;
 const path = require('path');
 
-const CSV_PATH = path.join(__dirname, '../data/attendees.csv');
+// 환경변수에서 이벤트 설정 읽기
+const EVENT_ID = process.env.EVENT_ID || 'default-event';
+const CSV_FIELDS = process.env.CSV_FIELDS || '등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간';
+const CSV_REQUIRED = process.env.CSV_REQUIRED || '등록번호,고객명,회사명,이메일';
 
 class CSVService {
+  constructor() {
+    // 동적 CSV 경로 설정
+    this.csvPath = path.join(__dirname, `../data/${EVENT_ID}/attendees.csv`);
+    this.dataDir = path.join(__dirname, `../data/${EVENT_ID}`);
+    
+    // CSV 헤더 설정
+    this.headers = CSV_FIELDS.split(',').map(field => field.trim());
+    this.requiredFields = CSV_REQUIRED.split(',').map(field => field.trim());
+    
+    // 데이터 디렉토리 생성
+    this.ensureDataDirectory();
+  }
+  
+  async ensureDataDirectory() {
+    try {
+      await fs.mkdir(this.dataDir, { recursive: true });
+      
+      // CSV 파일이 없으면 헤더만 있는 빈 파일 생성
+      try {
+        await fs.access(this.csvPath);
+      } catch {
+        await fs.writeFile(this.csvPath, this.headers.join(',') + '\n', 'utf8');
+        console.log(`✅ CSV 파일 생성됨: ${this.csvPath}`);
+      }
+    } catch (error) {
+      console.error('데이터 디렉토리 생성 오류:', error);
+    }
+  }
   async readAttendees() {
     try {
-      const data = await fs.readFile(CSV_PATH, 'utf8');
+      const data = await fs.readFile(this.csvPath, 'utf8');
       const lines = data.trim().split('\n');
-      const headers = lines[0].split(',');
+      if (lines.length < 1) return [];
       
+      const fileHeaders = lines[0].split(',').map(h => h.trim());
       const attendees = [];
+      
       for (let i = 1; i < lines.length; i++) {
         const values = lines[i].split(',');
         const attendee = {};
-        headers.forEach((header, index) => {
-          attendee[header] = values[index];
+        fileHeaders.forEach((header, index) => {
+          attendee[header] = values[index] || '';
         });
         attendees.push(attendee);
       }
@@ -28,15 +61,18 @@ class CSVService {
 
   async writeAttendees(attendees) {
     try {
-      const headers = ['등록번호', '고객명', '회사명', '연락처', '이메일', '초대/현장방문', '체크인', '체크인시간'];
-      let csvContent = headers.join(',') + '\n';
+      let csvContent = this.headers.join(',') + '\n';
       
       attendees.forEach(attendee => {
-        const row = headers.map(header => attendee[header] || '').join(',');
+        const row = this.headers.map(header => {
+          const value = attendee[header] || '';
+          // 쉼표나 줄바꿈이 있으면 큰따옴표로 감싸기
+          return value.includes(',') || value.includes('\n') ? `"${value}"` : value;
+        }).join(',');
         csvContent += row + '\n';
       });
       
-      await fs.writeFile(CSV_PATH, csvContent, 'utf8');
+      await fs.writeFile(this.csvPath, csvContent, 'utf8');
       return true;
     } catch (error) {
       console.error('CSV 파일 쓰기 오류:', error);
@@ -68,11 +104,10 @@ class CSVService {
 
   async generateCSV(attendees) {
     try {
-      const headers = ['등록번호', '고객명', '회사명', '연락처', '이메일', '초대/현장방문', '체크인', '체크인시간'];
-      let csvContent = headers.join(',') + '\n';
+      let csvContent = this.headers.join(',') + '\n';
       
       attendees.forEach(attendee => {
-        const row = headers.map(header => {
+        const row = this.headers.map(header => {
           const value = attendee[header] || '';
           // 쉼표나 줄바꿈이 있으면 큰따옴표로 감싸기
           return value.includes(',') || value.includes('\n') ? `"${value}"` : value;
@@ -94,7 +129,16 @@ class CSVService {
         throw new Error('CSV 파일에 데이터가 없습니다.');
       }
       
-      const headers = lines[0].split(',').map(h => h.trim());
+      const uploadHeaders = lines[0].split(',').map(h => h.trim());
+      
+      // 필수 필드 검증
+      const missingFields = this.requiredFields.filter(field => 
+        !uploadHeaders.includes(field)
+      );
+      if (missingFields.length > 0) {
+        throw new Error(`필수 필드가 누락되었습니다: ${missingFields.join(', ')}`);
+      }
+      
       const attendees = [];
       
       for (let i = 1; i < lines.length; i++) {
@@ -120,7 +164,7 @@ class CSVService {
         values.push(current.trim());
         
         const attendee = {};
-        headers.forEach((header, index) => {
+        uploadHeaders.forEach((header, index) => {
           attendee[header] = values[index] || '';
         });
         

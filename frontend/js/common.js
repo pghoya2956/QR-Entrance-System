@@ -2,8 +2,78 @@
  * 공통 유틸리티 및 API 함수
  */
 
-// API 기본 URL
-const API_BASE_URL = '';
+// 멀티 백엔드 지원을 위한 변수
+let currentBackend = null;
+let availableBackends = [];
+
+// 백엔드 디스커버리 (포트 스캔)
+async function discoverBackends() {
+    const backends = [];
+    const startPort = 3001;
+    const endPort = 3010;
+    
+    console.log('🔍 백엔드 검색 중...');
+    
+    for (let port = startPort; port <= endPort; port++) {
+        try {
+            const response = await fetch(`http://localhost:${port}/api/info`, {
+                method: 'GET',
+                mode: 'cors',
+                signal: AbortSignal.timeout(1000) // 1초 타임아웃
+            });
+            
+            if (response.ok) {
+                const info = await response.json();
+                backends.push({
+                    ...info,
+                    baseUrl: `http://localhost:${port}`
+                });
+                console.log(`✅ 발견: ${info.eventName} (포트 ${port})`);
+            }
+        } catch (error) {
+            // 연결 실패는 무시 (해당 포트에 백엔드 없음)
+            console.log(`❌ 포트 ${port} 연결 실패 (타임아웃)`);
+        }
+    }
+    
+    availableBackends = backends;
+    return backends;
+}
+
+// 현재 백엔드 설정
+function setCurrentBackend(backend) {
+    currentBackend = backend;
+    localStorage.setItem('selectedBackendPort', backend.port);
+    // 테스트를 위해 window 객체에도 저장
+    window.apiBaseUrl = backend.baseUrl;
+    console.log(`🎯 백엔드 선택됨: ${backend.eventName}`);
+}
+
+// API URL 생성
+function getApiUrl(path) {
+    if (!currentBackend) {
+        throw new Error('백엔드가 선택되지 않았습니다.');
+    }
+    return `${currentBackend.baseUrl}${path}`;
+}
+
+// 저장된 백엔드 복원
+async function restoreSelectedBackend() {
+    const savedPort = localStorage.getItem('selectedBackendPort');
+    if (savedPort && availableBackends.length > 0) {
+        const backend = availableBackends.find(b => b.port == savedPort);
+        if (backend) {
+            setCurrentBackend(backend);
+            return true;
+        }
+    }
+    // 첫 번째 백엔드를 기본값으로 설정
+    if (availableBackends.length > 0) {
+        setCurrentBackend(availableBackends[0]);
+        return true;
+    }
+    return false;
+}
 
 // 네비게이션 생성 함수
 function createNavigation(currentPage) {
@@ -38,7 +108,7 @@ const api = {
     // 참가자 목록 가져오기
     async getAttendees() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/attendees`);
+            const response = await fetch(getApiUrl('/api/admin/attendees'));
             if (!response.ok) throw new Error('Failed to fetch attendees');
             return await response.json();
         } catch (error) {
@@ -50,7 +120,7 @@ const api = {
     // 통계 가져오기
     async getStats() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/stats`);
+            const response = await fetch(getApiUrl('/api/admin/stats'));
             if (!response.ok) throw new Error('Failed to fetch stats');
             return await response.json();
         } catch (error) {
@@ -62,7 +132,7 @@ const api = {
     // 체크인 토글
     async toggleCheckin(registrationNumber) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/attendee/${registrationNumber}/toggle-checkin`, {
+            const response = await fetch(getApiUrl(`/api/admin/attendee/${registrationNumber}/toggle-checkin`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -79,7 +149,7 @@ const api = {
     // QR 체크인 검증
     async verifyCheckin(qrData) {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/checkin/verify`, {
+            const response = await fetch(getApiUrl('/api/checkin/verify'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -110,7 +180,7 @@ const api = {
     // CSV 다운로드
     async downloadCSV() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/admin/export-csv`);
+            const response = await fetch(getApiUrl('/api/admin/export-csv'));
             if (!response.ok) throw new Error('Failed to download CSV');
             
             const blob = await response.blob();
@@ -118,7 +188,7 @@ const api = {
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = 'attendees.csv';
+            a.download = `attendees-${currentBackend.eventId}.csv`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
@@ -135,7 +205,7 @@ const api = {
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch(`${API_BASE_URL}/api/admin/import-csv`, {
+            const response = await fetch(getApiUrl('/api/admin/import-csv'), {
                 method: 'POST',
                 body: formData
             });
@@ -220,4 +290,98 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => document.body.removeChild(toast), 300);
     }, 3000);
+}
+
+// 이벤트 선택 UI 생성
+function createEventSelector() {
+    const selector = document.createElement('div');
+    selector.className = 'event-selector';
+    selector.innerHTML = `
+        <div class="event-selector-header">
+            <span>현재 이벤트:</span>
+            <select id="eventSelect" class="event-select">
+                <option value="">이벤트를 선택하세요</option>
+            </select>
+            <button id="refreshBackends" class="btn btn-secondary btn-sm">새로고침</button>
+        </div>
+    `;
+    
+    return selector;
+}
+
+// 이벤트 선택기 업데이트
+function updateEventSelector(backends) {
+    const select = document.getElementById('eventSelect');
+    if (!select) return;
+    
+    // 옵션 초기화
+    select.innerHTML = '<option value="">이벤트를 선택하세요</option>';
+    
+    // 백엔드 옵션 추가
+    backends.forEach(backend => {
+        const option = document.createElement('option');
+        option.value = backend.port;
+        option.textContent = `${backend.eventName} (포트 ${backend.port})`;
+        select.appendChild(option);
+    });
+    
+    // 현재 선택된 백엔드 표시
+    if (currentBackend) {
+        select.value = currentBackend.port;
+    }
+    
+    // 이벤트 리스너
+    select.addEventListener('change', (e) => {
+        const selectedPort = e.target.value;
+        if (selectedPort) {
+            const backend = availableBackends.find(b => b.port == selectedPort);
+            if (backend) {
+                setCurrentBackend(backend);
+                
+                // 페이지별로 다른 동작
+                const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+                
+                if (currentPage === 'attendees.html') {
+                    // 참석자 페이지에서는 데이터만 새로고침
+                    if (typeof loadStats === 'function') loadStats();
+                    if (typeof loadAttendees === 'function') loadAttendees();
+                    showToast(`${backend.eventName}로 전환되었습니다.`, 'success');
+                } else if (currentPage === 'index.html') {
+                    // 메인 페이지에서는 통계만 새로고침
+                    if (typeof loadStats === 'function') loadStats();
+                    showToast(`${backend.eventName}로 전환되었습니다.`, 'success');
+                } else {
+                    // 다른 페이지에서는 페이지 새로고침
+                    location.reload();
+                }
+            }
+        }
+    });
+}
+
+// 백엔드 초기화 (모든 페이지에서 호출)
+async function initializeBackends() {
+    try {
+        // 백엔드 검색
+        await discoverBackends();
+        
+        if (availableBackends.length === 0) {
+            showToast('활성화된 백엔드가 없습니다.', 'error');
+            return false;
+        }
+        
+        // 이전 선택 복원 또는 첫 번째 백엔드 선택
+        if (!await restoreSelectedBackend() && availableBackends.length > 0) {
+            setCurrentBackend(availableBackends[0]);
+        }
+        
+        // 이벤트 선택기 업데이트
+        updateEventSelector(availableBackends);
+        
+        return true;
+    } catch (error) {
+        console.error('백엔드 초기화 오류:', error);
+        showToast('백엔드 연결 실패', 'error');
+        return false;
+    }
 }

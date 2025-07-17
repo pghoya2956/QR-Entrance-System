@@ -56,6 +56,12 @@ function renderAttendees() {
                     ${isCheckedIn ? '✓' : '○'}
                 </div>
             </td>
+            <td>
+                <button class="btn btn-sm btn-generate-qr" 
+                        onclick="generateQRCode('${attendee['등록번호']}', '${attendee['고객명']}')">
+                    QR 생성
+                </button>
+            </td>
         `;
         
         tbody.appendChild(tr);
@@ -85,6 +91,9 @@ async function toggleAttendeeCheckin(registrationNumber) {
         showToast('체크인 상태 변경에 실패했습니다.', 'error');
     }
 }
+
+// 전역 스코프에 노출
+window.toggleAttendeeCheckin = toggleAttendeeCheckin;
 
 // 검색 기능
 const searchHandler = debounce(function(e) {
@@ -152,3 +161,115 @@ window.addEventListener('DOMContentLoaded', () => {
     // 5초마다 통계 업데이트
     setInterval(loadStats, 5000);
 });
+
+// QR 코드 관련 변수
+let currentQRData = null;
+
+// QR 코드 생성
+async function generateQRCode(registrationNumber, name) {
+    try {
+        // API 호출
+        const response = await fetch(getApiUrl('/api/qr/generate'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                registrationId: registrationNumber,
+                name: name
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('QR 코드 생성 실패');
+        }
+
+        const result = await response.json();
+        currentQRData = result.qrCode;
+
+        // 모달 제목 업데이트
+        document.getElementById('qrModalTitle').textContent = `QR 코드 - ${name} (${registrationNumber})`;
+
+        // QR 코드 표시
+        const qrContainer = document.getElementById('qrCode');
+        qrContainer.innerHTML = `<img src="${result.qrCode}" alt="QR Code" style="max-width: 300px;">`;
+
+        // 모달 표시
+        const modal = document.getElementById('qrModal');
+        modal.style.display = 'block';
+
+        // ESC 키로 닫기
+        document.addEventListener('keydown', handleModalEsc);
+        
+        // 모달 외부 클릭으로 닫기
+        modal.addEventListener('click', handleModalOutsideClick);
+    } catch (error) {
+        console.error('QR 코드 생성 실패:', error);
+        showToast('QR 코드 생성에 실패했습니다.', 'error');
+    }
+}
+
+// 모달 닫기
+function closeQRModal() {
+    const modal = document.getElementById('qrModal');
+    modal.style.display = 'none';
+    
+    // 이벤트 리스너 제거
+    document.removeEventListener('keydown', handleModalEsc);
+    modal.removeEventListener('click', handleModalOutsideClick);
+}
+
+// ESC 키 핸들러
+function handleModalEsc(event) {
+    if (event.key === 'Escape') {
+        closeQRModal();
+    }
+}
+
+// 모달 외부 클릭 핸들러
+function handleModalOutsideClick(event) {
+    const modal = document.getElementById('qrModal');
+    if (event.target === modal) {
+        closeQRModal();
+    }
+}
+
+// QR 코드 다운로드
+function downloadQR() {
+    if (!currentQRData) return;
+
+    // base64 데이터를 blob으로 변환
+    const base64Data = currentQRData.split(',')[1];
+    const byteCharacters = atob(base64Data);
+    const byteNumbers = new Array(byteCharacters.length);
+    
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'image/png' });
+    
+    // 다운로드 링크 생성
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.style.display = 'none';
+    a.href = url;
+    
+    // 파일명 설정
+    const modalTitle = document.getElementById('qrModalTitle').textContent;
+    const fileName = modalTitle.replace('QR 코드 - ', 'QR_').replace(/[^a-zA-Z0-9가-힣_]/g, '_') + '.png';
+    a.download = fileName;
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    // 정리
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+}
+
+// 전역 스코프에 함수들 노출
+window.generateQRCode = generateQRCode;
+window.closeQRModal = closeQRModal;
+window.downloadQR = downloadQR;

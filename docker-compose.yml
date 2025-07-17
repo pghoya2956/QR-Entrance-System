@@ -1,0 +1,97 @@
+services:
+  # 프론트엔드 (Nginx)
+  frontend:
+    image: nginx:alpine
+    container_name: qr-frontend
+    ports:
+      - "80:80"
+    volumes:
+      - ./frontend:/usr/share/nginx/html:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - qr-network
+    depends_on:
+      - backend-event1
+      - backend-event2
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+
+  # 백엔드 이벤트 1 예시
+  backend-event1:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-backend-event1
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - EVENT_ID=tech-conference-2025
+      - EVENT_NAME=2025 테크 컨퍼런스
+      - CSV_FIELDS=등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간
+      - CSV_REQUIRED=등록번호,고객명,회사명,이메일
+      - JWT_SECRET=qr-entrance-secret-key-2025
+    volumes:
+      - ./backend/src/data/tech-conference-2025:/app/backend/src/data/tech-conference-2025
+    networks:
+      - qr-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3001/api/info"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  # 백엔드 이벤트 2 예시
+  backend-event2:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: qr-backend-event2
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - EVENT_ID=startup-meetup-2025
+      - EVENT_NAME=스타트업 밋업 2025
+      - CSV_FIELDS=등록번호,고객명,회사명,이메일,직책,관심분야,체크인,체크인시간
+      - CSV_REQUIRED=등록번호,고객명,회사명,이메일
+      - JWT_SECRET=qr-entrance-secret-key-2025
+    volumes:
+      - ./backend/src/data/startup-meetup-2025:/app/backend/src/data/startup-meetup-2025
+    networks:
+      - qr-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://localhost:3002/api/info"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+
+  # 추가 백엔드는 아래와 같은 형식으로 추가
+  # backend-event3:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: qr-backend-event3
+  #   ports:
+  #     - "3003:3003"
+  #   environment:
+  #     - PORT=3003
+  #     - EVENT_ID=your-event-id
+  #     - EVENT_NAME=이벤트 이름
+  #     - CSV_FIELDS=필드1,필드2,필드3,...
+  #     - CSV_REQUIRED=필수필드1,필수필드2,...
+  #     - JWT_SECRET=qr-entrance-secret-key-2025
+  #   volumes:
+  #     - ./backend/src/data/your-event-id:/app/backend/src/data/your-event-id
+  #   networks:
+  #     - qr-network
+
+networks:
+  qr-network:
+    driver: bridge
