@@ -54,6 +54,13 @@
             
             // 네비게이션 추가
             document.getElementById('navigation').appendChild(createNavigation('scanner'));
+            
+            // 스캐너 초기화 - 백엔드 초기화 완료 후 실행
+            if (window.initializeScanner) {
+                await window.initializeScanner();
+            } else {
+                console.error('스캐너 초기화 함수를 찾을 수 없습니다');
+            }
         });
     </script>
 </body>
