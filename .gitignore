@@ -21,6 +21,7 @@ yarn-error.log*
 # 로그/임시
 *.log
 *.tmp
+*.csv
 
 # 기타
 .idea/

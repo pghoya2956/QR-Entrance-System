@@ -10,6 +10,10 @@ const SCAN_COOLDOWN = 3000;
 // 스캐너 프레임 색상 변경
 function setFrameState(state) {
     const frame = document.getElementById('scannerFrame');
+    if (!frame) {
+        console.error('scannerFrame 요소를 찾을 수 없습니다');
+        return;
+    }
     frame.className = 'scanner-frame';
     if (state) {
         frame.classList.add(state);
