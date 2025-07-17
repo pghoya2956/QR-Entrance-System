@@ -143,6 +143,14 @@ h1 {
     border-radius: 10px;
     box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.3);
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    /* 초기 상태에서는 숨김 */
+    display: none;
+}
+
+/* html5-qrcode가 시작되면 표시 */
+#reader video ~ .scanner-frame,
+#reader canvas ~ .scanner-frame {
+    display: block;
 }
 
 /* 시각적 피드백을 위한 프레임 색상 변화 */
@@ -276,8 +284,14 @@ h1 {
 #reader {
     width: 100%;
     max-width: 500px;
+    min-height: 400px;
     margin: 0 auto 20px;
     position: relative;
+    background: #f5f5f5;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 #status {
@@ -561,6 +575,7 @@ h1 {
 .scanner-container-full #reader {
     width: 100%;
     max-width: 100%;
+    min-height: 500px;
     margin: 0 auto 30px;
 }
 

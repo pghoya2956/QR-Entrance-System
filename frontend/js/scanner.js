@@ -14,6 +14,8 @@ function setFrameState(state) {
         console.error('scannerFrame 요소를 찾을 수 없습니다');
         return;
     }
+    // 스캐너가 시작되면 프레임 표시
+    frame.style.display = 'block';
     frame.className = 'scanner-frame';
     if (state) {
         frame.classList.add(state);
