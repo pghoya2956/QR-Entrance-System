@@ -1,10 +1,10 @@
-# QR 기반 입장 관리 시스템
+# QR 기반 입장 관리 시스템 v2.1
 
 QR 코드를 활용한 행사 참석자 입장 관리 웹 애플리케이션입니다. 사전 등록된 참석자에게 QR 코드를 발급하고, 카메라를 통해 실시간으로 체크인을 처리할 수 있습니다.
 
 ## 주요 기능
 
-- 📱 **QR 코드 생성**: 참석자별 고유 QR 코드 자동 생성
+- 📱 **QR 코드 생성**: 참석자별 고유 QR 코드 생성 및 다운로드
 - 📸 **실시간 QR 스캔**: 웹 카메라를 통한 실시간 QR 코드 인식
 - ✅ **체크인 관리**: 중복 체크인 방지 및 체크인 시간 기록
 - 📊 **실시간 통계**: 체크인 현황 실시간 모니터링
@@ -22,7 +22,7 @@ QR 코드를 활용한 행사 참석자 입장 관리 웹 애플리케이션입�
 
 ### 프론트엔드
 - HTML5/CSS3/JavaScript (Vanilla)
-- qr-scanner (Nimiq) - QR 코드 스캔
+- html5-qrcode - QR 코드 스캔
 - QRCode.js - QR 코드 생성
 
 ### 테스트
@@ -97,11 +97,11 @@ npx playwright test --ui
 npx playwright show-report
 ```
 
-#### 테스트 상태 (2025-07-16 기준)
+#### 테스트 상태 (2025-07-17 기준)
 - **총 테스트**: 57개
-- **통과**: 38개 (66.7%)
-- **실패**: 15개 (주로 미구현 기능)
-- **스킵**: 4개 (QR 코드 생성 UI)
+- **통과**: 36개 (63.2%)
+- **실패**: 17개 (주로 미구현 API 및 테스트 데이터 격리 문제)
+- **스킵**: 4개
 
 ## 사용 방법
 
@@ -110,8 +110,9 @@ npx playwright show-report
 - QR 스캐너, QR 코드 생성, 참석자 목록, 체크인 초기화 기능
 
 ### 2. QR 코드 생성
-- "전체 QR 코드 생성" 버튼 클릭
-- 생성된 QR 코드를 이메일로 발송하거나 출력
+- 참석자 관리 페이지에서 각 참석자별 "QR 생성" 버튼 클릭
+- 모달 창에서 QR 코드 확인 및 다운로드
+- QR 형식: `CHECKIN:등록번호` (예: `CHECKIN:REG001`)
 
 ### 3. QR 스캔 및 체크인
 - "QR 스캐너 열기" 버튼 클릭
@@ -213,8 +214,9 @@ docker-compose logs -f [서비스명]
 - `GET /api/info` - 백엔드 이벤트 정보 조회
 
 ### QR 코드 관련
-- `GET /api/qr/generate/:registrationNumber` - 특정 참석자 QR 코드 생성
-- `GET /api/qr/generate-all` - 전체 참석자 QR 코드 생성
+- `POST /api/qr/generate` - QR 코드 생성 (미구현)
+- `GET /api/qr/generate/:registrationNumber` - 특정 참석자 QR 코드 생성 (미구현)
+- `GET /api/qr/generate-all` - 전체 참석자 QR 코드 생성 (미구현)
 
 ### 체크인 관련
 - `POST /api/checkin/verify` - QR 코드 검증 및 체크인 처리
@@ -223,6 +225,7 @@ docker-compose logs -f [서비스명]
 ### 관리자 관련
 - `GET /api/admin/attendees` - 전체 참석자 목록 조회
 - `GET /api/admin/stats` - 체크인 통계 조회
+- `PUT /api/admin/attendee/:registrationNumber/toggle-checkin` - 체크인 상태 토글
 - `POST /api/admin/reset` - 체크인 데이터 초기화
 - `GET /api/admin/export-csv` - CSV 파일 다운로드
 - `POST /api/admin/import-csv` - CSV 파일 업로드
@@ -262,7 +265,13 @@ qr-entrance-system/
 │   ├── start-prod.sh
 │   └── add-event.sh
 ├── tests/
-│   └── qr-checkin.spec.js    # Playwright 테스트
+│   └── e2e/                  # Playwright E2E 테스트
+│       ├── helpers/          # 공통 테스트 유틸리티
+│       ├── setup/            # 테스트 환경 설정
+│       ├── multi-event/      # 멀티 이벤트 테스트
+│       ├── checkin/          # 체크인 기능 테스트
+│       ├── admin/            # 관리자 기능 테스트
+│       └── security/         # 보안 테스트
 ├── docker-compose.yml        # 프로덕션 구성
 ├── docker-compose.dev.yml    # 개발 환경 구성
 ├── Dockerfile                # 백엔드 이미지
@@ -275,6 +284,11 @@ qr-entrance-system/
 ```
 
 ## 데이터 형식
+
+### QR 코드 형식
+QR 코드는 다음 형식으로 생성됩니다:
+- **형식**: `CHECKIN:등록번호`
+- **예시**: `CHECKIN:REG001`, `CHECKIN:1001`
 
 ### CSV 파일 형식 요구사항
 
@@ -340,13 +354,16 @@ qr-entrance-system/
 2. **실제 DOM 구조 확인 후 셀렉터 작성**
    - 올바른 예: `#attendeesTableBody`, `#searchBox`
    - 잘못된 예: `#attendeesList`, `#searchInput`
-3. **API 응답은 flat 구조 기준**
+3. **API 응답 구조 확인**
    ```javascript
-   // ✓ 올바른 방법
-   expect(stats.checkedIn).toBe(10);
+   // 성공 응답
+   { success: true, attendeeInfo: { name, company, registrationNumber } }
    
-   // ✗ 잘못된 방법
-   expect(stats.stats.checkedIn).toBe(10);
+   // 409 에러 (중복 체크인)
+   { error: "이미 체크인된 참석자입니다.", attendeeInfo: { ... } }
+   
+   // 기타 에러
+   { error: "에러 메시지" }
    ```
 
 ### 디버깅 가이드
@@ -368,10 +385,25 @@ qr-entrance-system/
   - 체크인 상태는 문자열: `"true"` / `"false"` (boolean 아님)
   - 이벤트 선택 후 3초 대기 권장 (초기화 완료 대기)
 
+## 최근 개선사항 (2025-07-17)
+
+### 구현 완료 기능
+- ✅ **QR 코드 생성 UI**: 참석자별 QR 생성 버튼, 모달 팝업, 다운로드 기능
+- ✅ **체크인 토글 기능**: 참석자 목록에서 체크인 상태를 클릭하여 변경
+- ✅ **이벤트 전환 개선**: 페이지 새로고침 없이 데이터만 로드 (attendees.html, index.html)
+- ✅ **스캐너 초기화 개선**: 백엔드 연결 완료 후 UI 활성화
+
+### 알려진 이슈
+- QR 생성 API (`/api/qr/generate`) 미구현 - 현재 UI만 구현됨
+- 테스트 데이터 격리 문제로 일부 테스트 실패
+- 이벤트 전환 시 스캐너 페이지는 여전히 페이지 새로고침 필요
+
 ## 향후 개선사항
 
 - [x] 멀티 이벤트 지원 (v2.0 완료)
 - [x] 유연한 CSV 형식 (v2.0 완료)
+- [x] QR 코드 생성 UI (v2.1 완료)
+- [ ] QR 코드 생성 API 구현
 - [ ] Google Sheets 연동
 - [ ] 이메일 자동 발송 기능
 - [ ] 실시간 동기화 (WebSocket)
