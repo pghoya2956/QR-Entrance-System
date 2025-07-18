@@ -704,15 +704,8 @@ let currentQRData = null;
 async function generateQRCode(registrationNumber, name) {
     try {
         // API 호출
-        const response = await fetch(getApiUrl('/api/qr/generate'), {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                registrationId: registrationNumber,
-                name: name
-            })
+        const response = await fetch(getApiUrl(`/api/qr/generate/${registrationNumber}`), {
+            method: 'GET'
         });
 
         if (!response.ok) {
