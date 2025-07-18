@@ -225,6 +225,94 @@ const api = {
             console.error('Error uploading CSV:', error);
             throw error;
         }
+    },
+    
+    // 참가자 수정
+    async updateAttendee(registrationNumber, updates) {
+        try {
+            const response = await fetch(getApiUrl(`/api/admin/attendees/${registrationNumber}`), {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updates)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to update attendee');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error updating attendee:', error);
+            throw error;
+        }
+    },
+    
+    // 참가자 삭제
+    async deleteAttendee(registrationNumber) {
+        try {
+            const response = await fetch(getApiUrl(`/api/admin/attendees/${registrationNumber}`), {
+                method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to delete attendee');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error deleting attendee:', error);
+            throw error;
+        }
+    },
+    
+    // 참가자 추가
+    async addAttendee(attendeeData) {
+        try {
+            const response = await fetch(getApiUrl('/api/admin/attendees'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(attendeeData)
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to add attendee');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error adding attendee:', error);
+            throw error;
+        }
+    },
+    
+    // 일괄 참가자 추가
+    async addAttendeesBulk(attendees) {
+        try {
+            const response = await fetch(getApiUrl('/api/admin/attendees/bulk'), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ attendees })
+            });
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.error || 'Failed to add attendees');
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error adding attendees in bulk:', error);
+            throw error;
+        }
     }
 };
 

@@ -177,6 +177,85 @@ class CSVService {
       throw error;
     }
   }
+
+  // 등록번호 자동 생성
+  async generateRegistrationNumber() {
+    try {
+      const attendees = await this.readAttendees();
+      
+      // 기존 등록번호들 추출
+      const existingNumbers = attendees.map(a => a['등록번호']);
+      
+      // 숫자형 등록번호만 필터링 (예: 1001, 1002)
+      const numericNumbers = existingNumbers
+        .filter(num => /^\d+$/.test(num))
+        .map(num => parseInt(num));
+      
+      if (numericNumbers.length > 0) {
+        // 가장 큰 번호 + 1
+        const maxNumber = Math.max(...numericNumbers);
+        return String(maxNumber + 1);
+      } else {
+        // 숫자형 등록번호가 없으면 타임스탬프 방식
+        return `R${Date.now()}`;
+      }
+    } catch (error) {
+      // 파일이 없거나 읽기 실패 시 타임스탬프 방식
+      return `R${Date.now()}`;
+    }
+  }
+
+  // 필수 필드 검증
+  validateRequired(attendeeData) {
+    const missing = [];
+    
+    this.requiredFields.forEach(field => {
+      if (!attendeeData[field] || attendeeData[field].trim() === '') {
+        missing.push(field);
+      }
+    });
+    
+    return missing;
+  }
+
+  // 참가자 추가
+  async addAttendee(attendeeData) {
+    const attendees = await this.readAttendees();
+    
+    // 중복 체크 (이메일 또는 등록번호)
+    const duplicate = attendees.find(a => 
+      (attendeeData['이메일'] && a['이메일'] === attendeeData['이메일']) ||
+      (attendeeData['등록번호'] && a['등록번호'] === attendeeData['등록번호'])
+    );
+    
+    if (duplicate) {
+      const field = duplicate['이메일'] === attendeeData['이메일'] ? '이메일' : '등록번호';
+      throw new Error(`중복된 ${field}입니다: ${duplicate['고객명'] || duplicate['이메일']}`);
+    }
+    
+    // CSV 형식에 맞게 데이터 정렬
+    const orderedData = {};
+    this.headers.forEach(header => {
+      orderedData[header] = attendeeData[header] || '';
+    });
+    
+    attendees.push(orderedData);
+    await this.writeAttendees(attendees);
+    
+    return orderedData;
+  }
+
+  // CSV 행을 문자열로 변환 (쉼표와 줄바꿈 처리)
+  attendeeToCSVRow(attendee) {
+    return this.headers.map(header => {
+      const value = attendee[header] || '';
+      // 쉼표, 줄바꿈, 큰따옴표가 있으면 큰따옴표로 감싸기
+      if (value.includes(',') || value.includes('\n') || value.includes('"')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    }).join(',');
+  }
 }
 
 module.exports = new CSVService();

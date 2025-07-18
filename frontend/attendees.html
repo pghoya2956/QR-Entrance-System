@@ -38,11 +38,8 @@
         
         <!-- 파일 관리 -->
         <div class="file-actions">
+            <button class="btn btn-success" onclick="showAddAttendeeModal()">+ 참가자 추가</button>
             <button class="btn btn-primary" onclick="api.downloadCSV()">CSV 다운로드</button>
-            <div class="file-input-wrapper">
-                <input type="file" id="csvFile" accept=".csv">
-                <label for="csvFile" class="file-input-label">CSV 업로드</label>
-            </div>
         </div>
         
         <!-- 검색 및 필터 -->
@@ -72,7 +69,7 @@
                         <th>유형</th>
                         <th>체크인 시간</th>
                         <th>체크인</th>
-                        <th>QR 코드</th>
+                        <th>액션</th>
                     </tr>
                 </thead>
                 <tbody id="attendeesTableBody">
@@ -96,6 +93,70 @@
         </div>
     </div>
 
+    <!-- 참가자 추가 모달 -->
+    <div id="addAttendeeModal" class="modal" style="display: none;">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2>참가자 추가</h2>
+                <span class="modal-close" onclick="closeAddAttendeeModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <!-- 탭 전환 -->
+                <div class="tabs">
+                    <button class="tab-button active" onclick="switchTab('individual')">개별 추가</button>
+                    <button class="tab-button" onclick="switchTab('bulk')">일괄 추가 (텍스트)</button>
+                    <button class="tab-button" onclick="switchTab('csv')">CSV 파일 업로드</button>
+                </div>
+                
+                <!-- 개별 추가 탭 -->
+                <div id="individualTab" class="tab-content active">
+                    <form id="addAttendeeForm" onsubmit="handleAddAttendee(event)">
+                        <div id="dynamicFormFields">
+                            <!-- 동적으로 생성되는 필드들 -->
+                        </div>
+                        <button type="submit" class="btn btn-primary">추가하기</button>
+                    </form>
+                </div>
+                
+                <!-- 일괄 추가 탭 -->
+                <div id="bulkTab" class="tab-content" style="display: none;">
+                    <p class="bulk-instruction">엑셀에서 복사한 데이터를 붙여넣으세요 (첫 줄은 헤더)</p>
+                    <textarea id="bulkAddData" rows="10" 
+                              placeholder="고객명	회사명	이메일	연락처
+홍길동	ABC회사	hong@abc.com	010-1234-5678
+김철수	XYZ회사	kim@xyz.com	010-2345-6789"></textarea>
+                    <button class="btn btn-primary" onclick="handleBulkAdd()">일괄 추가</button>
+                    <div id="bulkAddResult" class="bulk-result" style="display: none;"></div>
+                </div>
+                
+                <!-- CSV 파일 업로드 탭 -->
+                <div id="csvTab" class="tab-content" style="display: none;">
+                    <div class="csv-upload-section">
+                        <p class="csv-instruction">CSV 파일을 선택하여 참가자를 추가하세요</p>
+                        <div class="csv-format-info">
+                            <p><strong>CSV 파일 형식:</strong></p>
+                            <pre>등록번호,고객명,회사명,연락처,이메일,초대/현장방문
+1001,홍길동,ABC회사,010-1234-5678,hong@abc.com,초대
+1002,김철수,XYZ회사,010-2345-6789,kim@xyz.com,초대</pre>
+                        </div>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="csvAddFile" accept=".csv" onchange="handleCSVFileSelect(event)">
+                            <label for="csvAddFile" class="file-input-label">CSV 파일 선택</label>
+                        </div>
+                        <div id="csvPreview" class="csv-preview" style="display: none;">
+                            <h4>미리보기</h4>
+                            <div id="csvPreviewContent"></div>
+                            <button class="btn btn-primary" onclick="confirmCSVUpload()">업로드 진행</button>
+                            <button class="btn btn-secondary" onclick="cancelCSVUpload()">취소</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/audio-feedback.js"></script>
+    <script src="js/common.js"></script>
     <script src="js/attendees.js"></script>
     <script>
         // 페이지 초기화

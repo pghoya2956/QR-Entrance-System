@@ -80,6 +80,174 @@ router.put('/attendee/:registrationNumber/toggle-checkin', async (req, res) => {
   }
 });
 
+// 개별 참가자 수정 API
+router.put('/attendees/:registrationNumber', async (req, res) => {
+  try {
+    const { registrationNumber } = req.params;
+    const updates = req.body;
+    
+    const attendees = await csvService.readAttendees();
+    const index = attendees.findIndex(a => a['등록번호'] === registrationNumber);
+    
+    if (index === -1) {
+      return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+    }
+    
+    // 수정 불가 필드 보호
+    delete updates['등록번호'];
+    delete updates['체크인시간'];
+    
+    // 이메일 중복 체크 (본인 제외)
+    if (updates['이메일']) {
+      const duplicate = attendees.find((a, i) => 
+        i !== index && a['이메일'] === updates['이메일']
+      );
+      if (duplicate) {
+        return res.status(409).json({ error: '이미 사용중인 이메일입니다' });
+      }
+    }
+    
+    // 업데이트
+    attendees[index] = { ...attendees[index], ...updates };
+    await csvService.writeAttendees(attendees);
+    
+    res.json({ 
+      success: true, 
+      attendee: attendees[index],
+      message: '정보가 수정되었습니다'
+    });
+  } catch (error) {
+    console.error('참가자 수정 오류:', error);
+    res.status(500).json({ error: '참가자 정보 수정 실패' });
+  }
+});
+
+// 참가자 삭제 API
+router.delete('/attendees/:registrationNumber', async (req, res) => {
+  try {
+    const { registrationNumber } = req.params;
+    
+    const attendees = await csvService.readAttendees();
+    const initialLength = attendees.length;
+    const filtered = attendees.filter(a => a['등록번호'] !== registrationNumber);
+    
+    if (filtered.length === initialLength) {
+      return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
+    }
+    
+    await csvService.writeAttendees(filtered);
+    
+    res.json({ 
+      success: true, 
+      message: '참가자가 삭제되었습니다',
+      deletedCount: initialLength - filtered.length
+    });
+  } catch (error) {
+    console.error('참가자 삭제 오류:', error);
+    res.status(500).json({ error: '참가자 삭제 실패' });
+  }
+});
+
+// 참가자 추가 API
+router.post('/attendees', async (req, res) => {
+  try {
+    const attendeeData = req.body;
+    
+    // 등록번호 자동 생성 (없을 경우)
+    if (!attendeeData['등록번호']) {
+      attendeeData['등록번호'] = await csvService.generateRegistrationNumber();
+    }
+    
+    // 기본값 설정
+    attendeeData['체크인'] = attendeeData['체크인'] || 'false';
+    attendeeData['체크인시간'] = attendeeData['체크인시간'] || '';
+    
+    // 필수 필드 검증
+    const missing = csvService.validateRequired(attendeeData);
+    if (missing.length > 0) {
+      return res.status(400).json({ 
+        error: '필수 필드가 누락되었습니다', 
+        missing 
+      });
+    }
+    
+    // CSV에 추가
+    const result = await csvService.addAttendee(attendeeData);
+    
+    // QR 생성
+    const qrData = await qrService.generateQRCode(result);
+    
+    res.json({
+      success: true,
+      attendee: result,
+      qrCode: qrData.qrCode,
+      message: '참가자가 추가되었습니다'
+    });
+    
+  } catch (error) {
+    console.error('참가자 추가 오류:', error);
+    res.status(error.message.includes('중복') ? 409 : 500).json({ 
+      error: error.message 
+    });
+  }
+});
+
+// 일괄 참가자 추가 API
+router.post('/attendees/bulk', async (req, res) => {
+  try {
+    const { attendees } = req.body;
+    
+    if (!Array.isArray(attendees)) {
+      return res.status(400).json({ error: '참가자 목록은 배열 형식이어야 합니다' });
+    }
+    
+    const results = {
+      added: 0,
+      failed: [],
+      duplicates: []
+    };
+    
+    for (const attendeeData of attendees) {
+      try {
+        // 등록번호 자동 생성
+        if (!attendeeData['등록번호']) {
+          attendeeData['등록번호'] = await csvService.generateRegistrationNumber();
+        }
+        
+        // 기본값 설정
+        attendeeData['체크인'] = 'false';
+        attendeeData['체크인시간'] = '';
+        
+        await csvService.addAttendee(attendeeData);
+        results.added++;
+        
+      } catch (error) {
+        if (error.message.includes('중복')) {
+          results.duplicates.push({
+            data: attendeeData,
+            error: error.message
+          });
+        } else {
+          results.failed.push({
+            data: attendeeData,
+            error: error.message
+          });
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      results,
+      message: `${results.added}명이 추가되었습니다`
+    });
+    
+  } catch (error) {
+    console.error('일괄 추가 오류:', error);
+    res.status(500).json({ error: '일괄 추가 처리 실패' });
+  }
+});
+
 // CSV 다운로드 API
 router.get('/export-csv', async (req, res) => {
   try {
