@@ -25,7 +25,7 @@ async function discoverBackends() {
                 const info = await response.json();
                 backends.push({
                     ...info,
-                    baseUrl: `/backend/${port}`
+                    baseUrl: `http://localhost:${port}`
                 });
                 console.log(`✅ 발견: ${info.eventName} (포트 ${port})`);
             }
