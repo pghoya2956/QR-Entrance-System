@@ -120,10 +120,25 @@
                 <!-- 일괄 추가 탭 -->
                 <div id="bulkTab" class="tab-content" style="display: none;">
                     <p class="bulk-instruction">엑셀에서 복사한 데이터를 붙여넣으세요 (첫 줄은 헤더)</p>
+                    <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
+                        <strong>지원되는 헤더명:</strong><br>
+                        • 이름/성명 → 고객명<br>
+                        • 회사/소속 → 회사명<br>
+                        • 전화/전화번호/휴대폰 → 연락처<br>
+                        • 이메일주소/email → 이메일<br>
+                        • 구분/참가구분/유형 → 초대/현장방문<br>
+                        <small style="color: #666;">※ 탭 또는 쉼표로 구분된 데이터 모두 지원</small>
+                    </div>
                     <textarea id="bulkAddData" rows="10" 
-                              placeholder="고객명	회사명	이메일	연락처
-홍길동	ABC회사	hong@abc.com	010-1234-5678
-김철수	XYZ회사	kim@xyz.com	010-2345-6789"></textarea>
+                              placeholder="고객명	회사명	이메일	연락처	초대/현장방문
+홍길동	ABC회사	hong@abc.com	010-1234-5678	초대
+김철수	XYZ회사	kim@xyz.com	010-2345-6789	현장방문"
+                              onpaste="handleBulkDataPaste(event)"
+                              oninput="previewBulkData()"></textarea>
+                    <div id="bulkPreview" class="bulk-preview" style="display: none;margin-top: 20px;">
+                        <h3>미리보기</h3>
+                        <div id="bulkPreviewContent"></div>
+                    </div>
                     <button class="btn btn-primary" onclick="handleBulkAdd()">일괄 추가</button>
                     <div id="bulkAddResult" class="bulk-result" style="display: none;"></div>
                 </div>

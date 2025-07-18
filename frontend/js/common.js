@@ -208,6 +208,14 @@ const api = {
         }
     },
     
+    // 이벤트 정보 가져오기
+    async getEventInfo() {
+        if (!currentBackend) {
+            throw new Error('백엔드가 선택되지 않았습니다.');
+        }
+        return currentBackend;
+    },
+    
     // CSV 업로드
     async uploadCSV(file) {
         try {

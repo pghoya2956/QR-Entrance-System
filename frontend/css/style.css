@@ -488,20 +488,44 @@ h1 {
 .attendees-table table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
 }
 
 .attendees-table th,
 .attendees-table td {
-    padding: 12px 15px;
+    padding: 12px 8px;
     text-align: left;
     border-bottom: 1px solid #eee;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
 }
 
 .attendees-table th {
     background-color: #f8f9fa;
     font-weight: 600;
     color: #2c3e50;
+    white-space: nowrap;
 }
+
+/* 테이블 컬럼 너비 설정 */
+.attendees-table th:nth-child(1),
+.attendees-table td:nth-child(1) { width: 10%; min-width: 80px; }  /* 등록번호 */
+.attendees-table th:nth-child(2),
+.attendees-table td:nth-child(2) { width: 10%; min-width: 80px; }  /* 이름 */
+.attendees-table th:nth-child(3),
+.attendees-table td:nth-child(3) { width: 15%; min-width: 120px; }  /* 회사명 */
+.attendees-table th:nth-child(4),
+.attendees-table td:nth-child(4) { width: 12%; min-width: 100px; }  /* 연락처 */
+.attendees-table th:nth-child(5),
+.attendees-table td:nth-child(5) { width: 18%; min-width: 150px; }  /* 이메일 */
+.attendees-table th:nth-child(6),
+.attendees-table td:nth-child(6) { width: 8%; min-width: 60px; }   /* 유형 */
+.attendees-table th:nth-child(7),
+.attendees-table td:nth-child(7) { width: 12%; min-width: 100px; }  /* 체크인 시간 */
+.attendees-table th:nth-child(8),
+.attendees-table td:nth-child(8) { width: 7%; min-width: 60px; }   /* 체크인 */
+.attendees-table th:nth-child(9),
+.attendees-table td:nth-child(9) { width: 8%; min-width: 120px; }   /* 액션 */
 
 .attendees-table tr:hover {
     background-color: #f8f9fa;
@@ -762,6 +786,13 @@ h1 {
 .action-buttons {
     display: flex;
     gap: 5px;
+    justify-content: center;
+}
+
+.action-buttons .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+    min-width: 30px;
 }
 
 .btn-delete {
@@ -855,6 +886,37 @@ h1 {
     padding: 15px;
     background-color: #f8f9fa;
     border-radius: 4px;
+}
+
+.bulk-preview {
+    padding: 15px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+}
+
+.preview-table {
+    width: 100%;
+    margin-top: 10px;
+    border-collapse: collapse;
+    font-size: 14px;
+}
+
+.preview-table th,
+.preview-table td {
+    padding: 8px;
+    text-align: left;
+    border: 1px solid #ddd;
+}
+
+.preview-table th {
+    background-color: #e9ecef;
+    font-weight: 600;
+}
+
+.preview-more {
+    margin-top: 10px;
+    color: #6c757d;
+    font-style: italic;
 }
 
 .bulk-result-summary p {

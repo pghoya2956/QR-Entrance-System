@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const csvService = require('../services/csvService');
+const qrService = require('../services/qrService');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -197,6 +198,11 @@ router.post('/attendees/bulk', async (req, res) => {
   try {
     const { attendees } = req.body;
     
+    console.log('일괄 추가 요청:', {
+      count: attendees?.length,
+      firstItem: attendees?.[0]
+    });
+    
     if (!Array.isArray(attendees)) {
       return res.status(400).json({ error: '참가자 목록은 배열 형식이어야 합니다' });
     }
@@ -209,6 +215,9 @@ router.post('/attendees/bulk', async (req, res) => {
     
     for (const attendeeData of attendees) {
       try {
+        // 필드 매핑 디버깅
+        console.log('처리 중인 참가자:', attendeeData);
+        
         // 등록번호 자동 생성
         if (!attendeeData['등록번호']) {
           attendeeData['등록번호'] = await csvService.generateRegistrationNumber();
@@ -218,10 +227,18 @@ router.post('/attendees/bulk', async (req, res) => {
         attendeeData['체크인'] = 'false';
         attendeeData['체크인시간'] = '';
         
+        // 필수 필드 검증
+        const missing = csvService.validateRequired(attendeeData);
+        if (missing.length > 0) {
+          throw new Error(`필수 필드 누락: ${missing.join(', ')}`);
+        }
+        
         await csvService.addAttendee(attendeeData);
         results.added++;
+        console.log(`✅ 추가 성공: ${attendeeData['고객명']} (${attendeeData['등록번호']})`);
         
       } catch (error) {
+        console.error(`❌ 추가 실패: ${error.message}`, attendeeData);
         if (error.message.includes('중복')) {
           results.duplicates.push({
             data: attendeeData,

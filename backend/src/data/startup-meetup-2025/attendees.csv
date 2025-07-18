@@ -1,2 +1,6 @@
 등록번호,고객명,회사명,이메일,직책,관심분야,체크인,체크인시간
-STU003,윤서연,테크Z,yoon@techz.com,개발자,AI,false,
+STU003,윤서연,테크Z,yoon@techz.com,개발자,AI,true,2025. 7. 18. 오후 2:52:42
+R1752818573042,테스트 참가자,테스트 회사,test@example.com,,,false,
+R1752818711923,테스트 참가자 1752818711882,테스트 회사,test1752818711882@example.com,,,false,
+R1752819209790,테스트1,회사A,test1-1752819209758@example.com,,,false,
+R1752819209792,테스트2,회사B,test2-1752819209758@example.com,,,false,

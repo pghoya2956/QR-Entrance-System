@@ -42,13 +42,13 @@ function renderAttendees() {
         const isCheckedIn = attendee['체크인'] === 'true';
         
         tr.innerHTML = `
-            <td>${attendee['등록번호']}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '고객명', this)">${attendee['고객명']}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '회사명', this)">${attendee['회사명']}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '연락처', this)">${attendee['연락처']}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '이메일', this)">${attendee['이메일']}</td>
+            <td>${attendee['등록번호'] || ''}</td>
+            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '고객명', this)">${attendee['고객명'] || ''}</td>
+            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '회사명', this)">${attendee['회사명'] || ''}</td>
+            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '연락처', this)">${attendee['연락처'] || ''}</td>
+            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '이메일', this)">${attendee['이메일'] || ''}</td>
             <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '초대/현장방문', this)">
-                <span class="attendee-type">${attendee['초대/현장방문']}</span>
+                <span class="attendee-type">${attendee['초대/현장방문'] || ''}</span>
             </td>
             <td>${formatDate(attendee['체크인시간'])}</td>
             <td>
@@ -326,6 +326,95 @@ async function handleAddAttendee(event) {
     }
 }
 
+// 일괄 데이터 붙여넣기 처리
+function handleBulkDataPaste(event) {
+    // 붙여넣기 후 약간의 지연을 두고 미리보기 실행
+    setTimeout(() => previewBulkData(), 100);
+}
+
+// 일괄 추가 미리보기
+function previewBulkData() {
+    const textarea = document.getElementById('bulkAddData');
+    const lines = textarea.value.trim().split('\n');
+    const previewDiv = document.getElementById('bulkPreview');
+    const previewContent = document.getElementById('bulkPreviewContent');
+    
+    if (lines.length < 2) {
+        previewDiv.style.display = 'none';
+        return;
+    }
+    
+    // 첫 줄은 헤더 - 탭 또는 쉼표로 구분
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    const headers = firstLine.split(delimiter).map(h => h.trim());
+    
+    // 백엔드에서 기대하는 필드명으로 매핑
+    const fieldMapping = {
+        '이름': '고객명',
+        '성명': '고객명',
+        '회사': '회사명',
+        '소속': '회사명',
+        '전화': '연락처',
+        '전화번호': '연락처',
+        '휴대폰': '연락처',
+        '이메일주소': '이메일',
+        'email': '이메일',
+        '구분': '초대/현장방문',
+        '참가구분': '초대/현장방문',
+        '유형': '초대/현장방문'
+    };
+    
+    const mappedHeaders = headers.map(h => fieldMapping[h.toLowerCase()] || h);
+    const attendees = [];
+    
+    // 데이터 파싱 (최대 5개만 미리보기)
+    for (let i = 1; i < lines.length && i <= 6; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const values = line.split(delimiter);
+        const attendee = {};
+        
+        mappedHeaders.forEach((header, index) => {
+            attendee[header] = values[index]?.trim() || '';
+        });
+        
+        attendees.push(attendee);
+    }
+    
+    if (attendees.length === 0) {
+        previewDiv.style.display = 'none';
+        return;
+    }
+    
+    // 테이블 생성
+    let tableHTML = '<table class="preview-table">';
+    tableHTML += '<thead><tr>';
+    headers.forEach(header => {
+        tableHTML += `<th>${header}</th>`;
+    });
+    tableHTML += '</tr></thead><tbody>';
+    
+    attendees.forEach(attendee => {
+        tableHTML += '<tr>';
+        headers.forEach((header, index) => {
+            const mappedHeader = mappedHeaders[index];
+            tableHTML += `<td>${attendee[mappedHeader] || ''}</td>`;
+        });
+        tableHTML += '</tr>';
+    });
+    
+    tableHTML += '</tbody></table>';
+    
+    if (lines.length > 6) {
+        tableHTML += `<p class="preview-more">... 총 ${lines.length - 1}명의 데이터</p>`;
+    }
+    
+    previewContent.innerHTML = tableHTML;
+    previewDiv.style.display = 'block';
+}
+
 // 일괄 추가 처리
 async function handleBulkAdd() {
     const textarea = document.getElementById('bulkAddData');
@@ -336,8 +425,28 @@ async function handleBulkAdd() {
         return;
     }
     
-    // 첫 줄은 헤더
-    const headers = lines[0].split('\t').map(h => h.trim());
+    // 첫 줄은 헤더 - 탭 또는 쉼표로 구분
+    const firstLine = lines[0];
+    const delimiter = firstLine.includes('\t') ? '\t' : ',';
+    const headers = firstLine.split(delimiter).map(h => h.trim());
+    
+    // 백엔드에서 기대하는 필드명으로 매핑
+    const fieldMapping = {
+        '이름': '고객명',
+        '성명': '고객명',
+        '회사': '회사명',
+        '소속': '회사명',
+        '전화': '연락처',
+        '전화번호': '연락처',
+        '휴대폰': '연락처',
+        '이메일주소': '이메일',
+        'email': '이메일',
+        '구분': '초대/현장방문',
+        '참가구분': '초대/현장방문',
+        '유형': '초대/현장방문'
+    };
+    
+    const mappedHeaders = headers.map(h => fieldMapping[h.toLowerCase()] || h);
     const attendees = [];
     
     // 데이터 파싱
@@ -345,10 +454,10 @@ async function handleBulkAdd() {
         const line = lines[i].trim();
         if (!line) continue;
         
-        const values = line.split('\t');
+        const values = line.split(delimiter);
         const attendee = {};
         
-        headers.forEach((header, index) => {
+        mappedHeaders.forEach((header, index) => {
             attendee[header] = values[index]?.trim() || '';
         });
         
@@ -612,6 +721,8 @@ window.closeAddAttendeeModal = closeAddAttendeeModal;
 window.switchTab = switchTab;
 window.handleAddAttendee = handleAddAttendee;
 window.handleBulkAdd = handleBulkAdd;
+window.handleBulkDataPaste = handleBulkDataPaste;
+window.previewBulkData = previewBulkData;
 window.handleCSVFileSelect = handleCSVFileSelect;
 window.confirmCSVUpload = confirmCSVUpload;
 window.cancelCSVUpload = cancelCSVUpload;
