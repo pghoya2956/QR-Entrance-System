@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>참가자 관리 - QR 입장 관리 시스템</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=3.1.1">
 </head>
 <body>
     <div class="app-layout">
@@ -333,7 +333,10 @@
                 <div id="bulkTab" class="tab-content" style="display: none;">
                     <p class="bulk-instruction">엑셀에서 복사한 데이터를 붙여넣으세요</p>
                     <textarea id="bulkAddData" rows="10" placeholder="고객명	회사명	이메일	연락처	초대/현장방문" oninput="previewBulkData()"></textarea>
-                    <div id="bulkPreview" style="display: none;"></div>
+                    <div id="bulkPreview" style="display: none;">
+                        <div id="bulkPreviewContent"></div>
+                    </div>
+                    <div id="bulkAddResult" style="display: none;"></div>
                     <button class="btn btn-primary" onclick="handleBulkAdd()">일괄 추가</button>
                 </div>
                 
@@ -343,15 +346,17 @@
                         <input type="file" id="csvAddFile" accept=".csv" onchange="handleCSVFileSelect(event)">
                         <label for="csvAddFile" class="btn btn-primary">CSV 파일 선택</label>
                     </div>
-                    <div id="csvPreview" style="display: none;"></div>
+                    <div id="csvPreview" style="display: none;">
+                        <div id="csvPreviewContent"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
     
-    <script src="js/common.js"></script>
-    <script src="js/audio-feedback.js"></script>
-    <script src="js/attendees.js"></script>
+    <script src="js/common.js?v=3.1.1"></script>
+    <script src="js/audio-feedback.js?v=3.1.1"></script>
+    <script src="js/attendees.js?v=3.1.1"></script>
     
     <style>
         /* 모바일 반응형 */
@@ -397,10 +402,41 @@
     </style>
     
     <script>
+        // 이벤트 드롭다운 로드
+        function loadEventOptions() {
+            const selectElement = document.getElementById('eventSelect');
+            if (!selectElement) return;
+            
+            selectElement.innerHTML = '';
+            availableEvents.forEach(event => {
+                const option = document.createElement('option');
+                option.value = event.eventId;
+                option.textContent = event.eventName;
+                if (event.eventId === currentEventId) {
+                    option.selected = true;
+                }
+                selectElement.appendChild(option);
+            });
+        }
+        
+        // 이벤트 변경 핸들러
+        function handleEventChange() {
+            const selectElement = document.getElementById('eventSelect');
+            const eventId = selectElement.value;
+            
+            if (eventId && eventId !== currentEventId) {
+                setCurrentEvent(eventId);
+                // 참가자 페이지에서는 데이터만 새로고침
+                if (typeof loadStats === 'function') loadStats();
+                if (typeof loadAttendees === 'function') loadAttendees();
+                showToast(`이벤트가 변경되었습니다`, 'success');
+            }
+        }
+        
         // 페이지 초기화
         window.addEventListener('DOMContentLoaded', async () => {
             // 백엔드 초기화
-            const backendReady = await initializeBackends();
+            const backendReady = await initializeEvents();
             if (!backendReady) {
                 showToast('백엔드 연결 실패', 'error');
                 return;

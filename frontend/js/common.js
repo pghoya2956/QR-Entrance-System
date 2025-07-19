@@ -2,73 +2,62 @@
  * 공통 유틸리티 및 API 함수
  */
 
-// 멀티 백엔드 지원을 위한 변수
-let currentBackend = null;
-let availableBackends = [];
+// 버전 관리
+const APP_VERSION = '3.1.1';
 
-// 백엔드 디스커버리 (포트 스캔)
-async function discoverBackends() {
-    const backends = [];
-    const startPort = 3001;
-    const endPort = 3010;
-    
-    console.log('🔍 백엔드 검색 중...');
-    
-    for (let port = startPort; port <= endPort; port++) {
-        try {
-            const response = await fetch(`/backend/${port}/api/info`, {
-                method: 'GET',
-                signal: AbortSignal.timeout(1000) // 1초 타임아웃
-            });
-            
-            if (response.ok) {
-                const info = await response.json();
-                backends.push({
-                    ...info,
-                    baseUrl: `http://localhost:${port}`
-                });
-                console.log(`✅ 발견: ${info.eventName} (포트 ${port})`);
-            }
-        } catch (error) {
-            // 연결 실패는 무시 (해당 포트에 백엔드 없음)
-            console.log(`❌ 포트 ${port} 연결 실패`);
-        }
+// 이벤트 관련 변수
+let currentEventId = null;
+let availableEvents = [];
+
+// API 기본 URL
+const API_BASE_URL = '/api';
+
+// 이벤트 목록 가져오기
+async function fetchEvents() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/events`);
+        if (!response.ok) throw new Error('Failed to fetch events');
+        
+        availableEvents = await response.json();
+        console.log('✅ 이벤트 목록:', availableEvents);
+        return availableEvents;
+    } catch (error) {
+        console.error('❌ 이벤트 목록 조회 실패:', error);
+        showToast('이벤트 목록을 불러올 수 없습니다.', 'error');
+        return [];
     }
-    
-    availableBackends = backends;
-    return backends;
 }
 
-// 현재 백엔드 설정
-function setCurrentBackend(backend) {
-    currentBackend = backend;
-    localStorage.setItem('selectedBackendPort', backend.port);
-    // 테스트를 위해 window 객체에도 저장
-    window.apiBaseUrl = backend.baseUrl;
-    console.log(`🎯 백엔드 선택됨: ${backend.eventName}`);
+// 현재 이벤트 설정
+function setCurrentEvent(eventId) {
+    currentEventId = eventId;
+    localStorage.setItem('selectedEventId', eventId);
+    console.log(`🎯 이벤트 선택됨: ${eventId}`);
 }
 
-// API URL 생성
+// API URL 생성 (event_id 파라미터 포함)
 function getApiUrl(path) {
-    if (!currentBackend) {
-        throw new Error('백엔드가 선택되지 않았습니다.');
+    if (!currentEventId) {
+        throw new Error('이벤트가 선택되지 않았습니다.');
     }
-    return `${currentBackend.baseUrl}${path}`;
+    // 쿼리 파라미터 추가
+    const separator = path.includes('?') ? '&' : '?';
+    return `${API_BASE_URL}${path}${separator}event_id=${currentEventId}`;
 }
 
-// 저장된 백엔드 복원
-async function restoreSelectedBackend() {
-    const savedPort = localStorage.getItem('selectedBackendPort');
-    if (savedPort && availableBackends.length > 0) {
-        const backend = availableBackends.find(b => b.port == savedPort);
-        if (backend) {
-            setCurrentBackend(backend);
+// 저장된 이벤트 복원
+async function restoreSelectedEvent() {
+    const savedEventId = localStorage.getItem('selectedEventId');
+    if (savedEventId && availableEvents.length > 0) {
+        const event = availableEvents.find(e => e.eventId === savedEventId);
+        if (event) {
+            setCurrentEvent(savedEventId);
             return true;
         }
     }
-    // 첫 번째 백엔드를 기본값으로 설정
-    if (availableBackends.length > 0) {
-        setCurrentBackend(availableBackends[0]);
+    // 첫 번째 이벤트를 기본값으로 설정
+    if (availableEvents.length > 0) {
+        setCurrentEvent(availableEvents[0].eventId);
         return true;
     }
     return false;
@@ -107,15 +96,15 @@ const api = {
     // 참가자 목록 가져오기
     async getAttendees() {
         try {
-            const response = await fetch(getApiUrl('/api/admin/attendees'));
+            const response = await fetch(getApiUrl('/admin/attendees'));
             if (!response.ok) throw new Error('Failed to fetch attendees');
             return await response.json();
         } catch (error) {
             console.error('Error fetching attendees:', error);
-            if (error.message.includes('백엔드가 선택되지 않았습니다')) {
+            if (error.message.includes('이벤트가 선택되지 않았습니다')) {
                 showToast('이벤트를 먼저 선택해주세요.', 'error');
             } else {
-                showToast('참가자 목록을 불러올 수 없습니다. 백엔드 서버 연결을 확인해주세요.', 'error');
+                showToast('참가자 목록을 불러올 수 없습니다.', 'error');
             }
             throw error;
         }
@@ -124,15 +113,15 @@ const api = {
     // 통계 가져오기
     async getStats() {
         try {
-            const response = await fetch(getApiUrl('/api/admin/stats'));
+            const response = await fetch(getApiUrl('/admin/stats'));
             if (!response.ok) throw new Error('Failed to fetch stats');
             return await response.json();
         } catch (error) {
             console.error('Error fetching stats:', error);
-            if (error.message.includes('백엔드가 선택되지 않았습니다')) {
+            if (error.message.includes('이벤트가 선택되지 않았습니다')) {
                 showToast('이벤트를 먼저 선택해주세요.', 'error');
             } else {
-                showToast('통계 정보를 불러올 수 없습니다. 백엔드 서버 연결을 확인해주세요.', 'error');
+                showToast('통계 정보를 불러올 수 없습니다.', 'error');
             }
             throw error;
         }
@@ -141,7 +130,7 @@ const api = {
     // 체크인 토글
     async toggleCheckin(registrationNumber) {
         try {
-            const response = await fetch(getApiUrl(`/api/admin/attendee/${registrationNumber}/toggle-checkin`), {
+            const response = await fetch(getApiUrl(`/admin/attendee/${registrationNumber}/toggle-checkin`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -158,7 +147,7 @@ const api = {
     // QR 체크인 검증
     async verifyCheckin(qrData) {
         try {
-            const response = await fetch(getApiUrl('/api/checkin/verify'), {
+            const response = await fetch(getApiUrl('/checkin/verify'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -189,7 +178,7 @@ const api = {
     // CSV 다운로드
     async downloadCSV() {
         try {
-            const response = await fetch(getApiUrl('/api/admin/export-csv'));
+            const response = await fetch(getApiUrl('/admin/export-csv'));
             if (!response.ok) throw new Error('Failed to download CSV');
             
             const blob = await response.blob();
@@ -197,7 +186,7 @@ const api = {
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = `attendees-${currentBackend.eventId}.csv`;
+            a.download = `attendees-${currentEventId}.csv`;
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
@@ -210,10 +199,14 @@ const api = {
     
     // 이벤트 정보 가져오기
     async getEventInfo() {
-        if (!currentBackend) {
-            throw new Error('백엔드가 선택되지 않았습니다.');
+        try {
+            const response = await fetch(getApiUrl('/info'));
+            if (!response.ok) throw new Error('Failed to fetch event info');
+            return await response.json();
+        } catch (error) {
+            console.error('Error fetching event info:', error);
+            throw error;
         }
-        return currentBackend;
     },
     
     // CSV 업로드
@@ -222,7 +215,7 @@ const api = {
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch(getApiUrl('/api/admin/import-csv'), {
+            const response = await fetch(getApiUrl('/admin/import-csv'), {
                 method: 'POST',
                 body: formData
             });
@@ -238,7 +231,7 @@ const api = {
     // 참가자 수정
     async updateAttendee(registrationNumber, updates) {
         try {
-            const response = await fetch(getApiUrl(`/api/admin/attendees/${registrationNumber}`), {
+            const response = await fetch(getApiUrl(`/admin/attendees/${registrationNumber}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -261,7 +254,7 @@ const api = {
     // 참가자 삭제
     async deleteAttendee(registrationNumber) {
         try {
-            const response = await fetch(getApiUrl(`/api/admin/attendees/${registrationNumber}`), {
+            const response = await fetch(getApiUrl(`/admin/attendees/${registrationNumber}`), {
                 method: 'DELETE'
             });
             
@@ -280,7 +273,7 @@ const api = {
     // 참가자 추가
     async addAttendee(attendeeData) {
         try {
-            const response = await fetch(getApiUrl('/api/admin/attendees'), {
+            const response = await fetch(getApiUrl('/admin/attendees'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -303,7 +296,7 @@ const api = {
     // 일괄 참가자 추가
     async addAttendeesBulk(attendees) {
         try {
-            const response = await fetch(getApiUrl('/api/admin/attendees/bulk'), {
+            const response = await fetch(getApiUrl('/admin/attendees/bulk'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -321,6 +314,22 @@ const api = {
             console.error('Error adding attendees in bulk:', error);
             throw error;
         }
+    },
+    
+    // CSV 내보내기
+    async exportCSV() {
+        try {
+            // CSV 다운로드는 직접 URL 호출
+            window.location.href = getApiUrl('/admin/export-csv');
+        } catch (error) {
+            console.error('Error exporting CSV:', error);
+            throw error;
+        }
+    },
+    
+    // baseUrl 속성 추가 (기존 코드 호환성)
+    get baseUrl() {
+        return API_BASE_URL;
     }
 };
 
@@ -379,6 +388,39 @@ function debounce(func, wait) {
     };
 }
 
+// 이벤트 선택 초기화
+async function initializeEventSelection() {
+    try {
+        // 이벤트 목록 가져오기
+        await fetchEvents();
+        
+        // 저장된 이벤트 복원
+        await restoreSelectedEvent();
+        
+        // 현재 이벤트가 설정되어 있는지 확인
+        if (!currentEventId) {
+            // 첫 번째 이벤트 선택
+            if (availableEvents && availableEvents.length > 0) {
+                setCurrentEvent(availableEvents[0].eventId);
+            } else {
+                throw new Error('사용 가능한 이벤트가 없습니다');
+            }
+        }
+        
+        console.log('✅ 이벤트 선택 초기화 완료:', currentEventId);
+        return true;
+    } catch (error) {
+        console.error('❌ 이벤트 선택 초기화 실패:', error);
+        throw error;
+    }
+}
+
+// 스크립트/스타일 URL에 버전 추가
+function addVersion(url) {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}v=${APP_VERSION}`;
+}
+
 // 토스트 메시지 표시
 function showToast(message, type = 'info') {
     const toast = document.createElement('div');
@@ -407,7 +449,7 @@ function createEventSelector() {
             <select id="eventSelect" class="event-select">
                 <option value="">이벤트를 선택하세요</option>
             </select>
-            <button id="refreshBackends" class="btn btn-secondary btn-sm">새로고침</button>
+            <button id="refreshEvents" class="btn btn-secondary btn-sm">새로고침</button>
         </div>
     `;
     
@@ -415,33 +457,33 @@ function createEventSelector() {
 }
 
 // 이벤트 선택기 업데이트
-function updateEventSelector(backends) {
+function updateEventSelector(events) {
     const select = document.getElementById('eventSelect');
     if (!select) return;
     
     // 옵션 초기화
     select.innerHTML = '<option value="">이벤트를 선택하세요</option>';
     
-    // 백엔드 옵션 추가
-    backends.forEach(backend => {
+    // 이벤트 옵션 추가
+    events.forEach(event => {
         const option = document.createElement('option');
-        option.value = backend.port;
-        option.textContent = `${backend.eventName} (포트 ${backend.port})`;
+        option.value = event.eventId;
+        option.textContent = `${event.eventName} (${event.attendeeCount}명)`;
         select.appendChild(option);
     });
     
-    // 현재 선택된 백엔드 표시
-    if (currentBackend) {
-        select.value = currentBackend.port;
+    // 현재 선택된 이벤트 표시
+    if (currentEventId) {
+        select.value = currentEventId;
     }
     
     // 이벤트 리스너
     select.addEventListener('change', (e) => {
-        const selectedPort = e.target.value;
-        if (selectedPort) {
-            const backend = availableBackends.find(b => b.port == selectedPort);
-            if (backend) {
-                setCurrentBackend(backend);
+        const selectedEventId = e.target.value;
+        if (selectedEventId) {
+            const event = availableEvents.find(e => e.eventId === selectedEventId);
+            if (event) {
+                setCurrentEvent(selectedEventId);
                 
                 // 페이지별로 다른 동작
                 const currentPage = window.location.pathname.split('/').pop() || 'index.html';
@@ -450,11 +492,11 @@ function updateEventSelector(backends) {
                     // 참석자 페이지에서는 데이터만 새로고침
                     if (typeof loadStats === 'function') loadStats();
                     if (typeof loadAttendees === 'function') loadAttendees();
-                    showToast(`${backend.eventName}로 전환되었습니다.`, 'success');
+                    showToast(`${event.eventName}로 전환되었습니다.`, 'success');
                 } else if (currentPage === 'index.html') {
                     // 메인 페이지에서는 통계만 새로고침
                     if (typeof loadStats === 'function') loadStats();
-                    showToast(`${backend.eventName}로 전환되었습니다.`, 'success');
+                    showToast(`${event.eventName}로 전환되었습니다.`, 'success');
                 } else {
                     // 다른 페이지에서는 페이지 새로고침
                     location.reload();
@@ -464,29 +506,29 @@ function updateEventSelector(backends) {
     });
 }
 
-// 백엔드 초기화 (모든 페이지에서 호출)
-async function initializeBackends() {
+// 이벤트 초기화 (모든 페이지에서 호출)
+async function initializeEvents() {
     try {
-        // 백엔드 검색
-        await discoverBackends();
+        // 이벤트 목록 가져오기
+        await fetchEvents();
         
-        if (availableBackends.length === 0) {
-            showToast('활성화된 백엔드가 없습니다.', 'error');
+        if (availableEvents.length === 0) {
+            showToast('등록된 이벤트가 없습니다.', 'error');
             return false;
         }
         
-        // 이전 선택 복원 또는 첫 번째 백엔드 선택
-        if (!await restoreSelectedBackend() && availableBackends.length > 0) {
-            setCurrentBackend(availableBackends[0]);
+        // 이전 선택 복원 또는 첫 번째 이벤트 선택
+        if (!await restoreSelectedEvent() && availableEvents.length > 0) {
+            setCurrentEvent(availableEvents[0].eventId);
         }
         
         // 이벤트 선택기 업데이트
-        updateEventSelector(availableBackends);
+        updateEventSelector(availableEvents);
         
         return true;
     } catch (error) {
-        console.error('백엔드 초기화 오류:', error);
-        showToast('백엔드 연결 실패', 'error');
+        console.error('이벤트 초기화 오류:', error);
+        showToast('이벤트 목록을 불러올 수 없습니다.', 'error');
         return false;
     }
 }

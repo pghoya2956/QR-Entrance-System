@@ -37,7 +37,7 @@ router.post('/verify', async (req, res) => {
         }
       }
     }
-    const attendee = await dataService.getAttendeeByRegistrationNumber(registrationNumber);
+    const attendee = await dataService.getAttendeeByRegistrationNumber(registrationNumber, req.eventId);
     
     if (!attendee) {
       return res.status(404).json({ error: '참석자를 찾을 수 없습니다.' });
@@ -59,7 +59,7 @@ router.post('/verify', async (req, res) => {
     const updatedAttendee = await dataService.updateAttendee(registrationNumber, {
       '체크인': 'true',
       '체크인시간': checkinTime
-    });
+    }, req.eventId);
 
     res.json({
       success: true,
@@ -112,7 +112,7 @@ router.post('/batch', async (req, res) => {
         const updatedAttendee = await dataService.updateAttendee(registrationNumber, {
           '체크인': 'true',
           '체크인시간': timestamp || new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
-        });
+        }, req.eventId);
         
         if (updatedAttendee) {
           results.push({

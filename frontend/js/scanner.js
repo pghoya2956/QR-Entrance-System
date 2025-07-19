@@ -14,8 +14,6 @@ function setFrameState(state) {
         console.error('scannerFrame 요소를 찾을 수 없습니다');
         return;
     }
-    // 스캐너가 시작되면 프레임 표시
-    frame.style.display = 'block';
     frame.className = 'scanner-frame';
     if (state) {
         frame.classList.add(state);
@@ -95,9 +93,13 @@ function onScanFailure(error) {
 // 스캐너 시작
 async function startScanning() {
     try {
-        // 백엔드 연결 확인
-        if (!currentBackend) {
-            document.getElementById('status').textContent = '백엔드가 선택되지 않았습니다';
+        console.log('스캐너 시작 함수 호출됨');
+        console.log('currentEventId:', currentEventId);
+        console.log('Html5Qrcode 라이브러리 로드 여부:', typeof Html5Qrcode);
+        
+        // 이벤트 선택 확인
+        if (!currentEventId) {
+            document.getElementById('status').textContent = '이벤트가 선택되지 않았습니다';
             audioFeedback.error();
             return;
         }
@@ -108,6 +110,7 @@ async function startScanning() {
                 console.error('Html5Qrcode 라이브러리가 로드되지 않았습니다');
                 throw new Error('QR 스캐너 라이브러리를 찾을 수 없습니다');
             }
+            console.log('새 Html5Qrcode 인스턴스 생성');
             html5QrCode = new Html5Qrcode("reader");
         }
         
@@ -125,12 +128,29 @@ async function startScanning() {
         
         document.getElementById('status').textContent = '카메라 시작 중...';
         
+        console.log('카메라 시작 중... config:', config);
+        
+        // 카메라 권한 확인
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            console.log('카메라 권한 획득 성공');
+            // 스트림 정리
+            stream.getTracks().forEach(track => track.stop());
+        } catch (permErr) {
+            console.error('카메라 권한 오류:', permErr);
+            document.getElementById('status').textContent = '카메라 권한이 필요합니다';
+            throw new Error('카메라 권한이 거부되었습니다');
+        }
+        
         await html5QrCode.start(
             { facingMode: "environment" },
             config,
             onScanSuccess,
             onScanFailure
-        );
+        ).catch(err => {
+            console.error('카메라 시작 에러 상세:', err);
+            throw err;
+        });
         
         // 비디오 요소에 좌우반전 CSS 적용
         const video = document.querySelector('#reader video');
@@ -182,11 +202,28 @@ async function initializeScanner() {
     // 초기 상태 설정
     const toggleBtn = document.getElementById('toggleCamera');
     const statusDiv = document.getElementById('status');
+    const readerDiv = document.getElementById('reader');
     
-    if (!toggleBtn || !statusDiv) {
-        console.error('필수 DOM 요소를 찾을 수 없습니다');
+    console.log('DOM 요소 확인:', {
+        toggleBtn: !!toggleBtn,
+        statusDiv: !!statusDiv,
+        readerDiv: !!readerDiv
+    });
+    
+    if (!toggleBtn || !statusDiv || !readerDiv) {
+        console.error('필수 DOM 요소를 찾을 수 없습니다', {
+            toggleBtn,
+            statusDiv,
+            readerDiv
+        });
         return;
     }
+    
+    // reader div 크기 확인
+    console.log('Reader div 크기:', {
+        width: readerDiv.offsetWidth,
+        height: readerDiv.offsetHeight
+    });
     
     // 오디오 초기화를 위한 첫 클릭 이벤트
     document.addEventListener('click', () => {

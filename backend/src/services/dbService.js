@@ -81,6 +81,14 @@ class DBService {
           
           CREATE INDEX IF NOT EXISTS idx_attendees_event_checkin ON attendees(event_id, checked_in);
           CREATE INDEX IF NOT EXISTS idx_attendees_checkin_time ON attendees(checkin_time);
+          
+          CREATE TABLE IF NOT EXISTS events (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT,
+            created_at TEXT DEFAULT (datetime('now', 'localtime')),
+            updated_at TEXT DEFAULT (datetime('now', 'localtime'))
+          );
         `;
       }
       
@@ -90,9 +98,31 @@ class DBService {
       for (const statement of statements) {
         await this.runAsync(statement);
       }
+      
+      // 기본 이벤트 데이터 삽입
+      await this.insertDefaultEvents();
     } catch (error) {
       console.error('테이블 생성 오류:', error);
       throw error;
+    }
+  }
+  
+  async insertDefaultEvents() {
+    const events = [
+      { id: 'tech-conference-2025', name: '테크 컨퍼런스 2025', description: '최신 기술 동향을 공유하는 연례 컨퍼런스' },
+      { id: 'startup-meetup-2025', name: '스타트업 밋업 2025', description: '스타트업 네트워킹 이벤트' },
+      { id: 'default-event', name: '기본 이벤트', description: '테스트 및 데모용 기본 이벤트' }
+    ];
+    
+    for (const event of events) {
+      try {
+        await this.runAsync(
+          'INSERT OR IGNORE INTO events (id, name, description) VALUES (?, ?, ?)',
+          [event.id, event.name, event.description]
+        );
+      } catch (error) {
+        // 이미 존재하는 경우 무시
+      }
     }
   }
 
@@ -125,9 +155,9 @@ class DBService {
   }
 
   // CSV 필드명을 DB 컬럼명으로 매핑
-  mapCsvToDb(csvData) {
+  mapCsvToDb(csvData, eventId = null) {
     return {
-      event_id: this.eventId,
+      event_id: eventId || this.eventId,
       registration_number: csvData['등록번호'],
       name: csvData['고객명'],
       company: csvData['회사명'],
@@ -153,11 +183,12 @@ class DBService {
     };
   }
 
-  async readAttendees() {
+  async readAttendees(eventId = null) {
     try {
+      const targetEventId = eventId || this.eventId;
       const rows = await this.allAsync(
         'SELECT * FROM attendees WHERE event_id = ? ORDER BY registration_number',
-        [this.eventId]
+        [targetEventId]
       );
       
       // CSV 형식으로 변환하여 반환 (기존 API와 호환성 유지)
@@ -168,14 +199,15 @@ class DBService {
     }
   }
 
-  async writeAttendees(attendees) {
+  async writeAttendees(attendees, eventId = null) {
     try {
+      const targetEventId = eventId || this.eventId;
       // 트랜잭션 시작
       await this.runAsync('BEGIN TRANSACTION');
       
       try {
         // 기존 데이터 삭제
-        await this.runAsync('DELETE FROM attendees WHERE event_id = ?', [this.eventId]);
+        await this.runAsync('DELETE FROM attendees WHERE event_id = ?', [targetEventId]);
         
         // 새 데이터 삽입
         const insertSQL = `
@@ -186,7 +218,7 @@ class DBService {
         `;
         
         for (const attendee of attendees) {
-          const dbData = this.mapCsvToDb(attendee);
+          const dbData = this.mapCsvToDb(attendee, targetEventId);
           await this.runAsync(insertSQL, [
             dbData.event_id,
             dbData.registration_number,
@@ -212,12 +244,13 @@ class DBService {
     }
   }
 
-  async updateAttendee(registrationNumber, updates) {
+  async updateAttendee(registrationNumber, updates, eventId = null) {
     try {
+      const targetEventId = eventId || this.eventId;
       // 현재 참석자 정보 가져오기
       const attendee = await this.getAsync(
         'SELECT * FROM attendees WHERE event_id = ? AND registration_number = ?',
-        [this.eventId, registrationNumber]
+        [targetEventId, registrationNumber]
       );
       
       if (!attendee) {
@@ -273,14 +306,14 @@ class DBService {
         WHERE event_id = ? AND registration_number = ?
       `;
       
-      updateValues.push(this.eventId, registrationNumber);
+      updateValues.push(targetEventId, registrationNumber);
       
       await this.runAsync(updateSQL, updateValues);
       
       // 업데이트된 데이터 반환
       const updatedAttendee = await this.getAsync(
         'SELECT * FROM attendees WHERE event_id = ? AND registration_number = ?',
-        [this.eventId, registrationNumber]
+        [targetEventId, registrationNumber]
       );
       
       return this.mapDbToCsv(updatedAttendee);
@@ -290,11 +323,12 @@ class DBService {
     }
   }
 
-  async getAttendeeByRegistrationNumber(registrationNumber) {
+  async getAttendeeByRegistrationNumber(registrationNumber, eventId = null) {
     try {
+      const targetEventId = eventId || this.eventId;
       const attendee = await this.getAsync(
         'SELECT * FROM attendees WHERE event_id = ? AND registration_number = ?',
-        [this.eventId, registrationNumber]
+        [targetEventId, registrationNumber]
       );
       
       return attendee ? this.mapDbToCsv(attendee) : null;
@@ -380,15 +414,16 @@ class DBService {
     }
   }
 
-  async generateRegistrationNumber() {
+  async generateRegistrationNumber(eventId = null) {
     try {
+      const targetEventId = eventId || this.eventId;
       // 가장 큰 REG 번호 찾기
       const result = await this.getAsync(
         `SELECT registration_number FROM attendees 
          WHERE event_id = ? AND registration_number LIKE 'REG%'
          ORDER BY registration_number DESC
          LIMIT 1`,
-        [this.eventId]
+        [targetEventId]
       );
       
       let nextNumber = 1;
@@ -418,13 +453,14 @@ class DBService {
     return missing;
   }
 
-  async addAttendee(attendeeData) {
+  async addAttendee(attendeeData, eventId = null) {
     try {
+      const targetEventId = eventId || this.eventId;
       // 중복 체크 (이메일 또는 등록번호)
       const duplicate = await this.getAsync(
         `SELECT * FROM attendees 
          WHERE event_id = ? AND (email = ? OR registration_number = ?)`,
-        [this.eventId, attendeeData['이메일'], attendeeData['등록번호']]
+        [targetEventId, attendeeData['이메일'], attendeeData['등록번호']]
       );
       
       if (duplicate) {
@@ -437,7 +473,7 @@ class DBService {
       }
       
       // DB에 삽입
-      const dbData = this.mapCsvToDb(attendeeData);
+      const dbData = this.mapCsvToDb(attendeeData, targetEventId);
       const result = await this.runAsync(
         `INSERT INTO attendees (
           event_id, registration_number, name, company, contact, 
@@ -473,6 +509,73 @@ class DBService {
   close() {
     if (this.db) {
       this.db.close();
+    }
+  }
+
+  async deleteAttendee(registrationNumber, eventId = null) {
+    try {
+      const targetEventId = eventId || this.eventId;
+      
+      // 참석자 존재 확인
+      const attendee = await this.getAsync(
+        'SELECT * FROM attendees WHERE event_id = ? AND registration_number = ?',
+        [targetEventId, registrationNumber]
+      );
+      
+      if (!attendee) {
+        return false;
+      }
+      
+      // 삭제 실행
+      await this.runAsync(
+        'DELETE FROM attendees WHERE event_id = ? AND registration_number = ?',
+        [targetEventId, registrationNumber]
+      );
+      
+      return true;
+    } catch (error) {
+      console.error('참석자 삭제 오류:', error);
+      throw error;
+    }
+  }
+
+  async checkUniqueConstraints(attendeeData, eventId = null, excludeRegistrationNumber = null) {
+    try {
+      const targetEventId = eventId || this.eventId;
+      const errors = [];
+      
+      // 이메일 중복 체크
+      if (attendeeData['이메일']) {
+        let emailQuery = 'SELECT * FROM attendees WHERE event_id = ? AND email = ?';
+        const emailParams = [targetEventId, attendeeData['이메일']];
+        
+        if (excludeRegistrationNumber) {
+          emailQuery += ' AND registration_number != ?';
+          emailParams.push(excludeRegistrationNumber);
+        }
+        
+        const emailDuplicate = await this.getAsync(emailQuery, emailParams);
+        if (emailDuplicate) {
+          errors.push('이미 존재하는 이메일입니다.');
+        }
+      }
+      
+      // 등록번호 중복 체크
+      if (attendeeData['등록번호'] && attendeeData['등록번호'] !== excludeRegistrationNumber) {
+        const regDuplicate = await this.getAsync(
+          'SELECT * FROM attendees WHERE event_id = ? AND registration_number = ?',
+          [targetEventId, attendeeData['등록번호']]
+        );
+        
+        if (regDuplicate) {
+          errors.push('이미 존재하는 등록번호입니다.');
+        }
+      }
+      
+      return errors;
+    } catch (error) {
+      console.error('유니크 제약 검사 오류:', error);
+      throw error;
     }
   }
 

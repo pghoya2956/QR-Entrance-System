@@ -9,16 +9,18 @@ const dataService = global.dataService;
 
 router.get('/attendees', async (req, res) => {
   try {
-    const attendees = await dataService.readAttendees();
+    console.log('Getting attendees for eventId:', req.eventId);
+    const attendees = await dataService.readAttendees(req.eventId);
     res.json(attendees);
   } catch (error) {
+    console.error('Error getting attendees:', error);
     res.status(500).json({ error: '참석자 목록 조회 실패' });
   }
 });
 
 router.get('/stats', async (req, res) => {
   try {
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const total = attendees.length;
     const checkedIn = attendees.filter(a => a['체크인'] === 'true').length;
     const notCheckedIn = total - checkedIn;
@@ -36,14 +38,14 @@ router.get('/stats', async (req, res) => {
 
 router.post('/reset', async (req, res) => {
   try {
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const resetAttendees = attendees.map(attendee => ({
       ...attendee,
       '체크인': 'false',
       '체크인시간': ''
     }));
     
-    await dataService.writeAttendees(resetAttendees);
+    await dataService.writeAttendees(resetAttendees, req.eventId);
     res.json({ success: true, message: '모든 체크인 데이터가 초기화되었습니다.' });
   } catch (error) {
     res.status(500).json({ error: '초기화 실패' });
@@ -54,7 +56,7 @@ router.post('/reset', async (req, res) => {
 router.put('/attendee/:registrationNumber/toggle-checkin', async (req, res) => {
   try {
     const { registrationNumber } = req.params;
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const attendeeIndex = attendees.findIndex(a => a['등록번호'] === registrationNumber);
     
     if (attendeeIndex === -1) {
@@ -70,7 +72,7 @@ router.put('/attendee/:registrationNumber/toggle-checkin', async (req, res) => {
       '체크인시간': newCheckedInStatus === 'true' ? new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' }) : ''
     };
     
-    await dataService.writeAttendees(attendees);
+    await dataService.writeAttendees(attendees, req.eventId);
     
     res.json({ 
       success: true, 
@@ -89,7 +91,7 @@ router.put('/attendees/:registrationNumber', async (req, res) => {
     const { registrationNumber } = req.params;
     const updates = req.body;
     
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const index = attendees.findIndex(a => a['등록번호'] === registrationNumber);
     
     if (index === -1) {
@@ -112,7 +114,7 @@ router.put('/attendees/:registrationNumber', async (req, res) => {
     
     // 업데이트
     attendees[index] = { ...attendees[index], ...updates };
-    await dataService.writeAttendees(attendees);
+    await dataService.writeAttendees(attendees, req.eventId);
     
     res.json({ 
       success: true, 
@@ -130,7 +132,7 @@ router.delete('/attendees/:registrationNumber', async (req, res) => {
   try {
     const { registrationNumber } = req.params;
     
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const initialLength = attendees.length;
     const filtered = attendees.filter(a => a['등록번호'] !== registrationNumber);
     
@@ -138,7 +140,7 @@ router.delete('/attendees/:registrationNumber', async (req, res) => {
       return res.status(404).json({ error: '참가자를 찾을 수 없습니다' });
     }
     
-    await dataService.writeAttendees(filtered);
+    await dataService.writeAttendees(filtered, req.eventId);
     
     res.json({ 
       success: true, 
@@ -158,7 +160,7 @@ router.post('/attendees', async (req, res) => {
     
     // 등록번호 자동 생성 (없을 경우)
     if (!attendeeData['등록번호']) {
-      attendeeData['등록번호'] = await dataService.generateRegistrationNumber();
+      attendeeData['등록번호'] = await dataService.generateRegistrationNumber(req.eventId);
     }
     
     // 기본값 설정
@@ -175,7 +177,7 @@ router.post('/attendees', async (req, res) => {
     }
     
     // CSV에 추가
-    const result = await dataService.addAttendee(attendeeData);
+    const result = await dataService.addAttendee(attendeeData, req.eventId);
     
     // QR 생성
     const qrData = await qrService.generateQRCode(result);
@@ -222,7 +224,7 @@ router.post('/attendees/bulk', async (req, res) => {
         
         // 등록번호 자동 생성
         if (!attendeeData['등록번호']) {
-          attendeeData['등록번호'] = await dataService.generateRegistrationNumber();
+          attendeeData['등록번호'] = await dataService.generateRegistrationNumber(req.eventId);
         }
         
         // 기본값 설정
@@ -235,7 +237,7 @@ router.post('/attendees/bulk', async (req, res) => {
           throw new Error(`필수 필드 누락: ${missing.join(', ')}`);
         }
         
-        await dataService.addAttendee(attendeeData);
+        await dataService.addAttendee(attendeeData, req.eventId);
         results.added++;
         console.log(`✅ 추가 성공: ${attendeeData['고객명']} (${attendeeData['등록번호']})`);
         
@@ -270,7 +272,7 @@ router.post('/attendees/bulk', async (req, res) => {
 // CSV 다운로드 API
 router.get('/export-csv', async (req, res) => {
   try {
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const csvContent = await dataService.generateCSV(attendees);
     
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -296,7 +298,7 @@ router.post('/import-csv', upload.single('file'), async (req, res) => {
       return res.status(400).json({ error: '유효한 데이터가 없습니다.' });
     }
     
-    await dataService.writeAttendees(attendees);
+    await dataService.writeAttendees(attendees, req.eventId);
     
     res.json({ 
       success: true, 
@@ -318,7 +320,7 @@ router.post('/attendees/bulk-delete', async (req, res) => {
       return res.status(400).json({ error: '삭제할 참가자를 선택해주세요' });
     }
     
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const initialLength = attendees.length;
     const filtered = attendees.filter(a => !registrationNumbers.includes(a['등록번호']));
     const deletedCount = initialLength - filtered.length;
@@ -327,7 +329,7 @@ router.post('/attendees/bulk-delete', async (req, res) => {
       return res.status(404).json({ error: '삭제할 참가자를 찾을 수 없습니다' });
     }
     
-    await dataService.writeAttendees(filtered);
+    await dataService.writeAttendees(filtered, req.eventId);
     
     res.json({ 
       success: true, 
@@ -349,7 +351,7 @@ router.post('/attendees/bulk-checkin', async (req, res) => {
       return res.status(400).json({ error: '체크인할 참가자를 선택해주세요' });
     }
     
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     let updatedCount = 0;
     const currentTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
     
@@ -369,7 +371,7 @@ router.post('/attendees/bulk-checkin', async (req, res) => {
       return res.status(404).json({ error: '업데이트할 참가자를 찾을 수 없습니다' });
     }
     
-    await dataService.writeAttendees(updatedAttendees);
+    await dataService.writeAttendees(updatedAttendees, req.eventId);
     
     res.json({ 
       success: true, 
@@ -431,7 +433,7 @@ router.post('/qr/download-zip', async (req, res) => {
       return res.status(400).json({ error: 'QR을 생성할 참가자를 선택해주세요' });
     }
     
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const selectedAttendees = attendees.filter(a => 
       registrationNumbers.includes(a['등록번호'])
     );

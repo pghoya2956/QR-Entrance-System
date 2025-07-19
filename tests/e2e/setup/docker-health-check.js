@@ -5,8 +5,7 @@
 
 export async function waitForServices(services = [
   { name: 'frontend', url: 'http://localhost', expectedStatus: 200 },
-  { name: 'backend-event1', url: 'http://localhost:3001/api/info', expectedStatus: 200 },
-  { name: 'backend-event2', url: 'http://localhost:3002/api/info', expectedStatus: 200 }
+  { name: 'backend', url: 'http://localhost:5001/api/events', expectedStatus: 200 }
 ]) {
   const maxRetries = 30;
   const retryDelay = 2000; // 2초

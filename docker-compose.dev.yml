@@ -4,48 +4,22 @@ services:
   # 개발 환경에서는 프론트엔드를 로컬에서 직접 실행
   # npm run dev 또는 live-server 사용
   
-  # 백엔드 이벤트 1 (개발모드)
-  backend-event1-dev:
+  # 백엔드 (개발모드)
+  backend-dev:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: qr-backend-event1-dev
+    container_name: qr-backend-dev
     ports:
-      - "3001:3001"
+      - "5001:5001"
     environment:
-      - PORT=3001
-      - EVENT_ID=tech-conference-2025
-      - EVENT_NAME=2025 테크 컨퍼런스
-      - CSV_FIELDS=등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간
-      - CSV_REQUIRED=등록번호,고객명,회사명,이메일
+      - PORT=5001
       - JWT_SECRET=qr-entrance-secret-key-2025
       - NODE_ENV=development
+      - USE_DATABASE=true
+      - BACKUP_ON_START=false
     volumes:
       # 개발 모드에서는 소스 코드를 마운트하여 실시간 변경 반영
-      - ./backend:/app/backend
-      - ./package.json:/app/package.json
-      - ./package-lock.json:/app/package-lock.json
-    command: npm run dev
-    networks:
-      - qr-network-dev
-
-  # 백엔드 이벤트 2 (개발모드)
-  backend-event2-dev:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: qr-backend-event2-dev
-    ports:
-      - "3002:3002"
-    environment:
-      - PORT=3002
-      - EVENT_ID=startup-meetup-2025
-      - EVENT_NAME=스타트업 밋업 2025
-      - CSV_FIELDS=등록번호,고객명,회사명,이메일,직책,관심분야,체크인,체크인시간
-      - CSV_REQUIRED=등록번호,고객명,회사명,이메일
-      - JWT_SECRET=qr-entrance-secret-key-2025
-      - NODE_ENV=development
-    volumes:
       - ./backend:/app/backend
       - ./package.json:/app/package.json
       - ./package-lock.json:/app/package-lock.json

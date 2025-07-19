@@ -265,12 +265,30 @@ async function showAddAttendeeModal() {
 // 참가자 추가 모달 닫기
 function closeAddAttendeeModal() {
     const modal = document.getElementById('addAttendeeModal');
+    if (!modal) return;
+    
     modal.style.display = 'none';
     
     // 폼 초기화
-    document.getElementById('addAttendeeForm').reset();
-    document.getElementById('bulkAddData').value = '';
-    document.getElementById('bulkAddResult').style.display = 'none';
+    const addAttendeeForm = document.getElementById('addAttendeeForm');
+    if (addAttendeeForm) {
+        addAttendeeForm.reset();
+    }
+    
+    const bulkAddData = document.getElementById('bulkAddData');
+    if (bulkAddData) {
+        bulkAddData.value = '';
+    }
+    
+    const bulkAddResult = document.getElementById('bulkAddResult');
+    if (bulkAddResult) {
+        bulkAddResult.style.display = 'none';
+    }
+    
+    const bulkPreview = document.getElementById('bulkPreview');
+    if (bulkPreview) {
+        bulkPreview.style.display = 'none';
+    }
     
     // CSV 탭 초기화
     cancelCSVUpload();
@@ -310,32 +328,94 @@ function switchTab(tabName) {
 async function createAddAttendeeForm() {
     try {
         const eventInfo = await api.getEventInfo();
-        const fields = eventInfo.csvFields;
-        const required = eventInfo.requiredFields;
+        const fields = eventInfo.csvFields || ['고객명', '회사명', '연락처', '이메일', '초대/현장방문'];
+        const required = eventInfo.requiredFields || ['고객명', '이메일'];
+        
+        const dynamicFormFields = document.getElementById('dynamicFormFields');
+        if (!dynamicFormFields) {
+            console.error('dynamicFormFields 엘리먼트를 찾을 수 없습니다');
+            return;
+        }
         
         let formHTML = '';
-        fields.forEach(field => {
-            // 자동 생성 필드 제외
-            if (['체크인', '체크인시간'].includes(field)) return;
-            
-            const isRequired = required.includes(field);
-            const isRegistrationNumber = field === '등록번호';
-            
-            formHTML += `
+        
+        // fields가 배열인지 확인
+        if (Array.isArray(fields)) {
+            fields.forEach(field => {
+                // 자동 생성 필드 제외
+                if (['체크인', '체크인시간'].includes(field)) return;
+                
+                const isRequired = required.includes(field);
+                const isRegistrationNumber = field === '등록번호';
+                
+                formHTML += `
+                    <div class="form-group">
+                        <label>${field} ${isRequired && !isRegistrationNumber ? '*' : ''}</label>
+                        <input type="${field === '이메일' ? 'email' : 'text'}" 
+                               name="${field}" 
+                               ${isRequired && !isRegistrationNumber ? 'required' : ''}
+                               ${isRegistrationNumber ? 'placeholder="비워두면 자동 생성됩니다"' : `placeholder="${getFieldPlaceholder(field)}"`}>
+                    </div>
+                `;
+            });
+        } else {
+            console.error('fields가 배열이 아닙니다:', fields);
+            // 기본 폼 구조 사용
+            formHTML = `
                 <div class="form-group">
-                    <label>${field} ${isRequired && !isRegistrationNumber ? '*' : ''}</label>
-                    <input type="${field === '이메일' ? 'email' : 'text'}" 
-                           name="${field}" 
-                           ${isRequired && !isRegistrationNumber ? 'required' : ''}
-                           ${isRegistrationNumber ? 'placeholder="비워두면 자동 생성됩니다"' : `placeholder="${getFieldPlaceholder(field)}"`}>
+                    <label>고객명 *</label>
+                    <input type="text" name="고객명" required placeholder="홍길동">
+                </div>
+                <div class="form-group">
+                    <label>회사명</label>
+                    <input type="text" name="회사명" placeholder="ABC 회사">
+                </div>
+                <div class="form-group">
+                    <label>연락처</label>
+                    <input type="text" name="연락처" placeholder="010-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label>이메일 *</label>
+                    <input type="email" name="이메일" required placeholder="hong@example.com">
+                </div>
+                <div class="form-group">
+                    <label>초대/현장방문</label>
+                    <input type="text" name="초대/현장방문" placeholder="초대">
                 </div>
             `;
-        });
+        }
         
-        document.getElementById('dynamicFormFields').innerHTML = formHTML;
+        dynamicFormFields.innerHTML = formHTML;
     } catch (error) {
         console.error('폼 생성 실패:', error);
         showToast('폼 생성에 실패했습니다', 'error');
+        
+        // 에러 발생 시 기본 폼 사용
+        const dynamicFormFields = document.getElementById('dynamicFormFields');
+        if (dynamicFormFields) {
+            dynamicFormFields.innerHTML = `
+                <div class="form-group">
+                    <label>고객명 *</label>
+                    <input type="text" name="고객명" required placeholder="홍길동">
+                </div>
+                <div class="form-group">
+                    <label>회사명</label>
+                    <input type="text" name="회사명" placeholder="ABC 회사">
+                </div>
+                <div class="form-group">
+                    <label>연락처</label>
+                    <input type="text" name="연락처" placeholder="010-1234-5678">
+                </div>
+                <div class="form-group">
+                    <label>이메일 *</label>
+                    <input type="email" name="이메일" required placeholder="hong@example.com">
+                </div>
+                <div class="form-group">
+                    <label>초대/현장방문</label>
+                    <input type="text" name="초대/현장방문" placeholder="초대">
+                </div>
+            `;
+        }
     }
 }
 
@@ -848,26 +928,42 @@ window.addEventListener('DOMContentLoaded', () => {
     
     // CSV 업로드 이벤트 리스너 제거 (모달 내에서만 처리)
     
-    // 백엔드 초기화 완료 후 데이터 로드
-    if (window.initializeBackends) {
-        window.initializeBackends().then(success => {
-            if (success) {
-                loadStats();
-                loadAttendees();
-                
-                // 5초마다 통계 업데이트
-                setInterval(loadStats, 5000);
-            }
-        });
-    } else {
-        // fallback: 백엔드 초기화 대기
-        setTimeout(() => {
+    // 이벤트 초기화 및 데이터 로드
+    if (typeof initializeEventSelection === 'function') {
+        initializeEventSelection().then(() => {
             loadStats();
             loadAttendees();
             
             // 5초마다 통계 업데이트
             setInterval(loadStats, 5000);
-        }, 1000);
+        }).catch(error => {
+            console.error('이벤트 초기화 실패:', error);
+            showToast('이벤트 초기화 실패', 'error');
+        });
+    } else {
+        // initializeEventSelection이 없으면 직접 초기화
+        console.log('직접 초기화 시작');
+        
+        // 이벤트 목록 가져오기
+        fetchEvents().then(() => {
+            // 저장된 이벤트 복원
+            restoreSelectedEvent().then(() => {
+                // 현재 이벤트가 설정되어 있는지 확인
+                if (!currentEventId) {
+                    // 첫 번째 이벤트 선택
+                    if (availableEvents && availableEvents.length > 0) {
+                        setCurrentEvent(availableEvents[0].eventId);
+                    }
+                }
+                
+                // 데이터 로드
+                loadStats();
+                loadAttendees();
+                
+                // 5초마다 통계 업데이트
+                setInterval(loadStats, 5000);
+            });
+        });
     }
 });
 
@@ -878,7 +974,7 @@ let currentQRData = null;
 async function generateQRCode(registrationNumber, name) {
     try {
         // API 호출
-        const response = await fetch(getApiUrl(`/api/qr/generate/${registrationNumber}`), {
+        const response = await fetch(getApiUrl(`/qr/generate/${registrationNumber}`), {
             method: 'GET'
         });
 
@@ -1122,11 +1218,10 @@ async function bulkDownloadQR() {
     }
     
     try {
-        const response = await fetch(`${api.baseUrl}/admin/qr/download-zip`, {
+        const response = await fetch(getApiUrl('/admin/qr/download-zip'), {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${api.token}`
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify({
                 registrationNumbers: Array.from(selectedAttendees)

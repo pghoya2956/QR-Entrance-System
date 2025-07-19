@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  backend-test:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: qr-backend-test
+    environment:
+      - NODE_ENV=test
+      - PORT=5001
+      - EVENT_ID=test-event
+      - EVENT_NAME=테스트 이벤트
+      - JWT_SECRET=test-secret-key
+      - BACKUP_ON_START=false
+    volumes:
+      - ./backend:/app
+      - ./tests:/app/tests
+      - test-db:/app/src/data
+    ports:
+      - "5002:5001"
+    command: npm test
+
+volumes:
+  test-db:

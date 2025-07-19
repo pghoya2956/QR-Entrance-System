@@ -75,10 +75,10 @@ export const selectors = {
 /**
  * 백엔드 선택 및 데이터 로드 헬퍼
  * @param {import('@playwright/test').Page} page - Playwright page object
- * @param {string} port - 백엔드 포트 (예: '3001')
+ * @param {string} eventId - 이벤트 ID (예: 'tech-conference-2025')
  * @param {string} pageType - 페이지 타입 (index, attendees, scanner)
  */
-export async function selectBackendAndLoadData(page, port, pageType = 'index') {
+export async function selectBackendAndLoadData(page, eventId, pageType = 'index') {
   // 페이지 이동
   const pagePath = pageType === 'index' ? '/' : `/${pageType}.html`;
   await page.goto(pagePath);
@@ -87,18 +87,16 @@ export async function selectBackendAndLoadData(page, port, pageType = 'index') {
   await page.waitForTimeout(2000);
   await page.waitForSelector(selectors.eventSelect);
   
-  // 백엔드 선택 - 페이지별로 다른 동작
+  // 이벤트 선택 - 페이지별로 다른 동작
   if (pageType === 'attendees' || pageType === 'index') {
     // attendees.html과 index.html에서는 데이터만 새로고침
-    await page.selectOption(selectors.eventSelect, port);
+    await page.selectOption(selectors.eventSelect, eventId);
     // 토스트 메시지 대기
     await page.waitForSelector('.toast.show', { timeout: 5000 });
   } else {
-    // 다른 페이지에서는 페이지 리로드
-    await Promise.all([
-      page.waitForNavigation({ waitUntil: 'networkidle' }),
-      page.selectOption(selectors.eventSelect, port)
-    ]);
+    // 다른 페이지에서는 이벤트 선택 후 대기
+    await page.selectOption(selectors.eventSelect, eventId);
+    await page.waitForTimeout(1000);
   }
   
   // 리로드 후 추가 대기

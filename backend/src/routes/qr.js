@@ -7,7 +7,7 @@ const dataService = global.dataService;
 router.get('/generate/:registrationNumber', async (req, res) => {
   try {
     const { registrationNumber } = req.params;
-    const attendee = await dataService.getAttendeeByRegistrationNumber(registrationNumber);
+    const attendee = await dataService.getAttendeeByRegistrationNumber(registrationNumber, req.eventId);
     
     if (!attendee) {
       return res.status(404).json({ error: '참석자를 찾을 수 없습니다.' });
@@ -22,7 +22,7 @@ router.get('/generate/:registrationNumber', async (req, res) => {
 
 router.get('/generate-all', async (req, res) => {
   try {
-    const attendees = await dataService.readAttendees();
+    const attendees = await dataService.readAttendees(req.eventId);
     const qrCodes = [];
 
     for (const attendee of attendees) {
