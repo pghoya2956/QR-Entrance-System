@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const csvService = require('../services/csvService');
 const qrService = require('../services/qrService');
+// 전역 dataService 사용 (csvService 또는 dbService)
+const dataService = global.dataService;
 
 router.post('/verify', async (req, res) => {
   try {
@@ -36,7 +37,7 @@ router.post('/verify', async (req, res) => {
         }
       }
     }
-    const attendee = await csvService.getAttendeeByRegistrationNumber(registrationNumber);
+    const attendee = await dataService.getAttendeeByRegistrationNumber(registrationNumber);
     
     if (!attendee) {
       return res.status(404).json({ error: '참석자를 찾을 수 없습니다.' });
@@ -55,7 +56,7 @@ router.post('/verify', async (req, res) => {
     }
 
     const checkinTime = new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' });
-    const updatedAttendee = await csvService.updateAttendee(registrationNumber, {
+    const updatedAttendee = await dataService.updateAttendee(registrationNumber, {
       '체크인': 'true',
       '체크인시간': checkinTime
     });
@@ -108,7 +109,7 @@ router.post('/batch', async (req, res) => {
       }
       
       if (registrationNumber) {
-        const updatedAttendee = await csvService.updateAttendee(registrationNumber, {
+        const updatedAttendee = await dataService.updateAttendee(registrationNumber, {
           '체크인': 'true',
           '체크인시간': timestamp || new Date().toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })
         });

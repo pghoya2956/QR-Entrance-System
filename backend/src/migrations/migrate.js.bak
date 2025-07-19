@@ -1,0 +1,237 @@
+const Database = require('better-sqlite3');
+const fs = require('fs').promises;
+const path = require('path');
+
+class Migration {
+  constructor() {
+    this.dbPath = path.join(__dirname, '../data/qr-entrance.db');
+    this.dataDir = path.join(__dirname, '../data');
+    this.csvService = require('../services/csvService');
+  }
+
+  async run() {
+    console.log('🚀 마이그레이션 시작...');
+    
+    try {
+      // 1. 데이터 디렉토리 확인
+      await this.ensureDataDirectory();
+      
+      // 2. 데이터베이스 초기화
+      const db = new Database(this.dbPath);
+      db.pragma('journal_mode = WAL');
+      db.pragma('foreign_keys = ON');
+      
+      // 3. 초기 스키마 적용
+      const schema = await fs.readFile(
+        path.join(__dirname, '001-initial-schema.sql'), 
+        'utf8'
+      );
+      db.exec(schema);
+      
+      console.log('✅ 데이터베이스 스키마 생성 완료');
+      
+      // 4. 기존 CSV 데이터 마이그레이션
+      await this.migrateExistingData(db);
+      
+      // 5. 마이그레이션 버전 기록
+      const stmt = db.prepare(
+        'INSERT OR IGNORE INTO migration_history (version) VALUES (?)'
+      );
+      stmt.run('001-initial-schema');
+      
+      db.close();
+      
+      console.log('✅ 마이그레이션 완료!');
+      
+    } catch (error) {
+      console.error('❌ 마이그레이션 실패:', error);
+      process.exit(1);
+    }
+  }
+
+  async ensureDataDirectory() {
+    try {
+      await fs.mkdir(this.dataDir, { recursive: true });
+      
+      // 백업 디렉토리도 생성
+      const backupDir = path.join(this.dataDir, 'backups');
+      await fs.mkdir(backupDir, { recursive: true });
+      
+    } catch (error) {
+      console.error('디렉토리 생성 오류:', error);
+      throw error;
+    }
+  }
+
+  async migrateExistingData(db) {
+    console.log('📂 기존 CSV 데이터 검색 중...');
+    
+    // data 디렉토리의 모든 이벤트 폴더 찾기
+    const entries = await fs.readdir(this.dataDir, { withFileTypes: true });
+    const eventDirs = entries.filter(entry => 
+      entry.isDirectory() && entry.name !== 'backups'
+    );
+    
+    if (eventDirs.length === 0) {
+      console.log('ℹ️  마이그레이션할 CSV 데이터가 없습니다.');
+      return;
+    }
+    
+    const insertStmt = db.prepare(`
+      INSERT OR IGNORE INTO attendees (
+        event_id, registration_number, name, company, contact,
+        email, invitation_type, checked_in, checkin_time
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    
+    const transaction = db.transaction(() => {
+      for (const eventDir of eventDirs) {
+        const eventId = eventDir.name;
+        const csvPath = path.join(this.dataDir, eventId, 'attendees.csv');
+        
+        this.migrateSingleEvent(csvPath, eventId, insertStmt);
+      }
+    });
+    
+    transaction();
+    console.log(`✅ ${eventDirs.length}개 이벤트의 데이터 마이그레이션 완료`);
+  }
+
+  migrateSingleEvent(csvPath, eventId, insertStmt) {
+    try {
+      // CSV 파일 읽기
+      const csvContent = require('fs').readFileSync(csvPath, 'utf8');
+      const lines = csvContent.trim().split('\n');
+      
+      if (lines.length < 2) {
+        console.log(`⚠️  ${eventId}: 데이터 없음`);
+        return;
+      }
+      
+      const headers = lines[0].split(',').map(h => h.trim());
+      let count = 0;
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        // CSV 파싱
+        const values = this.parseCSVLine(line);
+        const attendee = {};
+        
+        headers.forEach((header, index) => {
+          attendee[header] = values[index] || '';
+        });
+        
+        // DB에 삽입
+        try {
+          insertStmt.run(
+            eventId,
+            attendee['등록번호'],
+            attendee['고객명'],
+            attendee['회사명'],
+            attendee['연락처'] || '',
+            attendee['이메일'],
+            attendee['초대/현장방문'] || '',
+            attendee['체크인'] === 'true' ? 1 : 0,
+            attendee['체크인시간'] || null
+          );
+          count++;
+        } catch (err) {
+          if (!err.message.includes('UNIQUE constraint')) {
+            console.error(`  ❌ ${eventId} - 행 ${i} 오류:`, err.message);
+          }
+        }
+      }
+      
+      console.log(`  ✅ ${eventId}: ${count}명 마이그레이션 완료`);
+      
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        console.log(`  ⚠️  ${eventId}: CSV 파일 없음`);
+      } else {
+        console.error(`  ❌ ${eventId} 마이그레이션 오류:`, error.message);
+      }
+    }
+  }
+
+  parseCSVLine(line) {
+    const values = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let j = 0; j < line.length; j++) {
+      const char = line[j];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        values.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    values.push(current.trim());
+    
+    return values;
+  }
+
+  // 마이그레이션 상태 확인
+  async checkStatus() {
+    try {
+      const db = new Database(this.dbPath);
+      
+      // 테이블 존재 확인
+      const tables = db.prepare(`
+        SELECT name FROM sqlite_master 
+        WHERE type='table' AND name='attendees'
+      `).all();
+      
+      if (tables.length === 0) {
+        console.log('❌ 데이터베이스가 초기화되지 않았습니다.');
+        return false;
+      }
+      
+      // 데이터 통계
+      const stats = db.prepare(`
+        SELECT event_id, COUNT(*) as count 
+        FROM attendees 
+        GROUP BY event_id
+      `).all();
+      
+      console.log('\n📊 데이터베이스 현황:');
+      stats.forEach(stat => {
+        console.log(`  - ${stat.event_id}: ${stat.count}명`);
+      });
+      
+      const total = db.prepare('SELECT COUNT(*) as count FROM attendees').get();
+      console.log(`  총계: ${total.count}명\n`);
+      
+      db.close();
+      return true;
+      
+    } catch (error) {
+      console.error('상태 확인 오류:', error);
+      return false;
+    }
+  }
+}
+
+// CLI 실행
+if (require.main === module) {
+  const migration = new Migration();
+  
+  const command = process.argv[2];
+  
+  switch (command) {
+    case 'status':
+      migration.checkStatus();
+      break;
+    case 'run':
+    default:
+      migration.run();
+      break;
+  }
+}
+
+module.exports = Migration;

@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>백업 관리 - QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">QR</div>
+                    <div class="sidebar-logo-text">입장 관리</div>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">메인 메뉴</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="index.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="attendees.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span>참가자 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="scanner.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                                <span>QR 스캐너</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">이벤트 관리</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="events.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>이벤트 목록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="analytics.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>통계 분석</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">시스템</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="settings.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="backup.html" class="sidebar-link active">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                                <span>백업 관리</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="header-title">백업 관리</h1>
+                    </div>
+                    
+                    <div class="header-right">
+                        <select class="event-select" id="eventSelect" onchange="handleEventChange()">
+                            <option value="">이벤트 선택</option>
+                        </select>
+                        
+                        <button class="header-btn">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span class="header-notification-badge"></span>
+                        </button>
+                        
+                        <div class="header-user">
+                            <div class="header-user-avatar">관</div>
+                            <div class="header-user-info">
+                                <div class="header-user-name">관리자</div>
+                                <div class="header-user-role">Administrator</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 페이지 콘텐츠 -->
+            <div class="page-content">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h2 class="page-title">데이터 백업 관리</h2>
+                    <p class="page-subtitle">시스템 데이터를 백업하고 복원합니다</p>
+                </div>
+                
+                <!-- 백업 상태 카드 -->
+                <div class="stats-container">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">마지막 백업</div>
+                                <div class="stat-value" id="lastBackupTime">2시간 전</div>
+                                <div class="stat-change">
+                                    <span>자동 백업 활성화</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">💾</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">백업 개수</div>
+                                <div class="stat-value" id="totalBackups">15</div>
+                                <div class="stat-change">
+                                    <span>30일 보관</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">📦</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">총 용량</div>
+                                <div class="stat-value" id="totalSize">1.2GB</div>
+                                <div class="stat-change">
+                                    <span>압축 저장</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">💿</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">다음 백업</div>
+                                <div class="stat-value" id="nextBackup">10시간 후</div>
+                                <div class="stat-change">
+                                    <span>매일 02:00</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">⏰</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 백업 액션 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">백업 작업</h3>
+                    </div>
+                    <div class="backup-actions">
+                        <div class="backup-action-item">
+                            <div class="backup-action-icon">
+                                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                            </div>
+                            <div class="backup-action-content">
+                                <div class="backup-action-title">수동 백업</div>
+                                <div class="backup-action-desc">현재 데이터를 즉시 백업합니다</div>
+                            </div>
+                            <button class="btn btn-primary" onclick="createBackup()">백업 시작</button>
+                        </div>
+                        
+                        <div class="backup-action-item">
+                            <div class="backup-action-icon">
+                                <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"></path>
+                                </svg>
+                            </div>
+                            <div class="backup-action-content">
+                                <div class="backup-action-title">데이터 복원</div>
+                                <div class="backup-action-desc">백업에서 데이터를 복원합니다</div>
+                            </div>
+                            <button class="btn btn-outline" onclick="showRestoreModal()">복원하기</button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 백업 목록 -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h3 class="card-title">백업 히스토리</h3>
+                        <div class="card-actions">
+                            <button class="btn btn-outline" onclick="refreshBackupList()">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                </svg>
+                                새로고침
+                            </button>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>백업 시간</th>
+                                    <th>백업 타입</th>
+                                    <th>이벤트</th>
+                                    <th>크기</th>
+                                    <th>상태</th>
+                                    <th>액션</th>
+                                </tr>
+                            </thead>
+                            <tbody id="backupListBody">
+                                <!-- 백업 목록이 여기에 표시됩니다 -->
+                            </tbody>
+                        </table>
+                        <div id="emptyBackupState" class="empty-state" style="display: none;">
+                            <div class="empty-state-icon">📁</div>
+                            <div class="empty-state-title">백업이 없습니다</div>
+                            <div class="empty-state-desc">아직 생성된 백업이 없습니다.</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 백업 설정 -->
+                <div class="card" style="margin-top: 24px;">
+                    <div class="card-header">
+                        <h3 class="card-title">백업 설정</h3>
+                    </div>
+                    <div class="settings-section">
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <div class="setting-title">자동 백업</div>
+                                <div class="setting-desc">매일 자정에 자동으로 백업을 생성합니다</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="autoBackup" checked onchange="updateBackupSettings()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <div class="setting-title">백업 보관 기간</div>
+                                <div class="setting-desc">오래된 백업은 자동으로 삭제됩니다</div>
+                            </div>
+                            <select class="setting-control" id="retentionPeriod" onchange="updateBackupSettings()">
+                                <option value="7">7일</option>
+                                <option value="30" selected>30일</option>
+                                <option value="90">90일</option>
+                                <option value="365">1년</option>
+                            </select>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <div class="setting-label">
+                                <div class="setting-title">백업 압축</div>
+                                <div class="setting-desc">백업 파일을 압축하여 저장 공간을 절약합니다</div>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="compressBackup" checked onchange="updateBackupSettings()">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <!-- 복원 모달 -->
+    <div id="restoreModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>데이터 복원</h2>
+                <span class="modal-close" onclick="closeRestoreModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div class="restore-warning">
+                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <div>
+                        <strong>주의:</strong> 복원 작업은 현재 데이터를 덮어씁니다.
+                        <br>복원 전 현재 데이터의 백업을 권장합니다.
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>복원할 백업 선택</label>
+                    <select id="restoreBackupSelect" class="form-control">
+                        <option value="">백업을 선택하세요</option>
+                    </select>
+                </div>
+                
+                <div class="modal-actions">
+                    <button class="btn btn-outline" onclick="closeRestoreModal()">취소</button>
+                    <button class="btn btn-primary" onclick="confirmRestore()">복원 시작</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <style>
+        /* 백업 액션 */
+        .backup-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            padding: 24px;
+        }
+        
+        .backup-action-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 24px;
+            background: var(--background);
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+        
+        .backup-action-icon {
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            background: var(--primary-light);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-color);
+        }
+        
+        .backup-action-content {
+            flex: 1;
+        }
+        
+        .backup-action-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .backup-action-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* 복원 경고 */
+        .restore-warning {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--warning-light);
+            border: 1px solid var(--warning-color);
+            border-radius: 8px;
+            margin-bottom: 24px;
+            color: var(--warning-dark);
+        }
+        
+        .restore-warning svg {
+            flex-shrink: 0;
+            color: var(--warning-color);
+        }
+        
+        /* 백업 상태 배지 */
+        .backup-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .backup-status.success {
+            background: var(--success-light);
+            color: var(--success-color);
+        }
+        
+        .backup-status.pending {
+            background: var(--warning-light);
+            color: var(--warning-color);
+        }
+        
+        .backup-status.failed {
+            background: var(--danger-light);
+            color: var(--danger-color);
+        }
+        
+        /* 액션 버튼 */
+        .backup-actions-cell {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .action-icon {
+            padding: 6px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .action-icon:hover {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        
+        .action-icon.danger:hover {
+            background: var(--danger-light);
+            color: var(--danger-color);
+        }
+    </style>
+    
+    <script src="js/common.js"></script>
+    
+    <script>
+        // 페이지 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 백엔드 초기화
+            const backendReady = await initializeBackends();
+            if (!backendReady) {
+                showToast('백엔드 연결 실패', 'error');
+                return;
+            }
+            
+            // 이벤트 목록 로드
+            loadEventOptions();
+            
+            // 백업 목록 로드
+            loadBackupList();
+            
+            // 백업 상태 업데이트
+            updateBackupStatus();
+        });
+        
+        // 백업 목록 로드
+        async function loadBackupList() {
+            try {
+                // 임시 데이터 (실제로는 API 호출)
+                const backups = [
+                    {
+                        id: 1,
+                        time: '2025-01-19 02:00:00',
+                        type: '자동',
+                        event: 'tech-conference-2025',
+                        size: '45.2 MB',
+                        status: 'success'
+                    },
+                    {
+                        id: 2,
+                        time: '2025-01-18 14:30:00',
+                        type: '수동',
+                        event: 'startup-meetup-2025',
+                        size: '38.7 MB',
+                        status: 'success'
+                    },
+                    {
+                        id: 3,
+                        time: '2025-01-18 02:00:00',
+                        type: '자동',
+                        event: 'tech-conference-2025',
+                        size: '44.8 MB',
+                        status: 'success'
+                    }
+                ];
+                
+                const tbody = document.getElementById('backupListBody');
+                const emptyState = document.getElementById('emptyBackupState');
+                
+                if (backups.length === 0) {
+                    tbody.style.display = 'none';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+                
+                tbody.style.display = '';
+                emptyState.style.display = 'none';
+                
+                tbody.innerHTML = backups.map(backup => `
+                    <tr>
+                        <td>${backup.time}</td>
+                        <td><span class="badge">${backup.type}</span></td>
+                        <td>${backup.event}</td>
+                        <td>${backup.size}</td>
+                        <td><span class="backup-status ${backup.status}">완료</span></td>
+                        <td>
+                            <div class="backup-actions-cell">
+                                <div class="action-icon" onclick="downloadBackup(${backup.id})" title="다운로드">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </div>
+                                <div class="action-icon" onclick="restoreBackup(${backup.id})" title="복원">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                </div>
+                                <div class="action-icon danger" onclick="deleteBackup(${backup.id})" title="삭제">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                    </svg>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `).join('');
+                
+                // 복원 모달 옵션 업데이트
+                const restoreSelect = document.getElementById('restoreBackupSelect');
+                restoreSelect.innerHTML = '<option value="">백업을 선택하세요</option>' +
+                    backups.map(backup => 
+                        `<option value="${backup.id}">${backup.time} - ${backup.event} (${backup.size})</option>`
+                    ).join('');
+                    
+            } catch (error) {
+                console.error('백업 목록 로드 실패:', error);
+                showToast('백업 목록을 불러올 수 없습니다', 'error');
+            }
+        }
+        
+        // 백업 상태 업데이트
+        function updateBackupStatus() {
+            // 마지막 백업 시간 계산
+            const lastBackup = new Date();
+            lastBackup.setHours(lastBackup.getHours() - 2);
+            document.getElementById('lastBackupTime').textContent = getRelativeTime(lastBackup);
+            
+            // 다음 백업 시간 계산
+            const nextBackup = new Date();
+            nextBackup.setDate(nextBackup.getDate() + 1);
+            nextBackup.setHours(2, 0, 0, 0);
+            const hoursUntilNext = Math.floor((nextBackup - new Date()) / (1000 * 60 * 60));
+            document.getElementById('nextBackup').textContent = `${hoursUntilNext}시간 후`;
+            
+            // 백업 개수와 용량 (임시 데이터)
+            document.getElementById('totalBackups').textContent = '15';
+            document.getElementById('totalSize').textContent = '1.2GB';
+        }
+        
+        // 상대 시간 계산
+        function getRelativeTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            
+            if (hours < 1) {
+                const minutes = Math.floor(diff / (1000 * 60));
+                return `${minutes}분 전`;
+            } else if (hours < 24) {
+                return `${hours}시간 전`;
+            } else {
+                const days = Math.floor(hours / 24);
+                return `${days}일 전`;
+            }
+        }
+        
+        // 수동 백업 생성
+        async function createBackup() {
+            if (!confirm('현재 데이터를 백업하시겠습니까?')) {
+                return;
+            }
+            
+            showToast('백업을 시작합니다...', 'info');
+            
+            try {
+                // API 호출 (실제 구현 필요)
+                const response = await api.createBackup();
+                
+                showToast('백업이 완료되었습니다', 'success');
+                loadBackupList();
+                updateBackupStatus();
+            } catch (error) {
+                console.error('백업 생성 실패:', error);
+                showToast('백업 생성에 실패했습니다', 'error');
+            }
+        }
+        
+        // 백업 다운로드
+        function downloadBackup(backupId) {
+            showToast('백업 다운로드를 준비 중입니다...', 'info');
+            // 실제 다운로드 구현
+        }
+        
+        // 백업 복원
+        function restoreBackup(backupId) {
+            document.getElementById('restoreBackupSelect').value = backupId;
+            showRestoreModal();
+        }
+        
+        // 백업 삭제
+        async function deleteBackup(backupId) {
+            if (!confirm('이 백업을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
+                return;
+            }
+            
+            try {
+                // API 호출 (실제 구현 필요)
+                showToast('백업이 삭제되었습니다', 'success');
+                loadBackupList();
+            } catch (error) {
+                console.error('백업 삭제 실패:', error);
+                showToast('백업 삭제에 실패했습니다', 'error');
+            }
+        }
+        
+        // 복원 모달 표시
+        function showRestoreModal() {
+            document.getElementById('restoreModal').style.display = 'block';
+        }
+        
+        // 복원 모달 닫기
+        function closeRestoreModal() {
+            document.getElementById('restoreModal').style.display = 'none';
+        }
+        
+        // 복원 확인
+        async function confirmRestore() {
+            const backupId = document.getElementById('restoreBackupSelect').value;
+            if (!backupId) {
+                showToast('복원할 백업을 선택해주세요', 'warning');
+                return;
+            }
+            
+            if (!confirm('선택한 백업으로 데이터를 복원하시겠습니까? 현재 데이터는 덮어씌워집니다.')) {
+                return;
+            }
+            
+            closeRestoreModal();
+            showToast('복원을 시작합니다...', 'info');
+            
+            try {
+                // API 호출 (실제 구현 필요)
+                showToast('데이터가 복원되었습니다', 'success');
+            } catch (error) {
+                console.error('복원 실패:', error);
+                showToast('데이터 복원에 실패했습니다', 'error');
+            }
+        }
+        
+        // 백업 목록 새로고침
+        function refreshBackupList() {
+            loadBackupList();
+            showToast('백업 목록을 새로고침했습니다', 'info');
+        }
+        
+        // 백업 설정 업데이트
+        function updateBackupSettings() {
+            const settings = {
+                autoBackup: document.getElementById('autoBackup').checked,
+                retentionPeriod: document.getElementById('retentionPeriod').value,
+                compressBackup: document.getElementById('compressBackup').checked
+            };
+            
+            // localStorage에 저장
+            localStorage.setItem('backupSettings', JSON.stringify(settings));
+            showToast('백업 설정이 저장되었습니다', 'success');
+        }
+    </script>
+</body>
+</html>

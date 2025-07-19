@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이벤트 목록 - QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">QR</div>
+                    <div class="sidebar-logo-text">입장 관리</div>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">메인 메뉴</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="index.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="attendees.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span>참가자 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="scanner.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                                <span>QR 스캐너</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">이벤트 관리</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="events.html" class="sidebar-link active">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>이벤트 목록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="analytics.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>통계 분석</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">시스템</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="settings.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="backup.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                                <span>백업 관리</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="header-title">이벤트 목록</h1>
+                    </div>
+                    
+                    <div class="header-right">
+                        <button class="header-btn">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span class="header-notification-badge"></span>
+                        </button>
+                        
+                        <div class="header-user">
+                            <div class="header-user-avatar">관</div>
+                            <div class="header-user-info">
+                                <div class="header-user-name">관리자</div>
+                                <div class="header-user-role">Administrator</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 페이지 콘텐츠 -->
+            <div class="page-content">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h2 class="page-title">이벤트 관리</h2>
+                    <p class="page-subtitle">등록된 이벤트를 관리하고 새로운 이벤트를 추가합니다</p>
+                </div>
+                
+                <!-- 이벤트 그리드 -->
+                <div class="events-grid" id="eventsGrid">
+                    <!-- 이벤트 카드들이 여기에 동적으로 추가됩니다 -->
+                </div>
+                
+                <!-- 빈 상태 -->
+                <div id="emptyState" class="empty-state-large" style="display: none;">
+                    <div class="empty-state-icon">📅</div>
+                    <div class="empty-state-title">등록된 이벤트가 없습니다</div>
+                    <div class="empty-state-desc">현재 활성화된 이벤트가 없습니다.</div>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <style>
+        /* 이벤트 그리드 */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 24px;
+            margin-top: 24px;
+        }
+        
+        /* 이벤트 카드 */
+        .event-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .event-card:hover {
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+            transform: translateY(-2px);
+        }
+        
+        .event-card-header {
+            padding: 24px;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            color: white;
+            position: relative;
+        }
+        
+        .event-status {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .event-status.active {
+            background: var(--success-color);
+        }
+        
+        .event-card-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .event-card-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .event-card-body {
+            padding: 24px;
+        }
+        
+        .event-info {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .event-info-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .event-info-icon {
+            width: 20px;
+            height: 20px;
+            color: var(--primary-color);
+        }
+        
+        .event-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .event-stat {
+            text-align: center;
+        }
+        
+        .event-stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .event-stat-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        .event-card-footer {
+            padding: 16px 24px;
+            background: var(--background);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .event-action {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            background: white;
+            border-radius: 6px;
+            font-size: 14px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+        
+        .event-action:hover {
+            background: var(--primary-light);
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+        
+        /* 빈 상태 */
+        .empty-state-large {
+            padding: 80px 40px;
+            text-align: center;
+        }
+        
+        .empty-state-large .empty-state-icon {
+            font-size: 80px;
+            margin-bottom: 24px;
+        }
+        
+        .empty-state-large .empty-state-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+        
+        .empty-state-large .empty-state-desc {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+    </style>
+    
+    <script src="js/common.js"></script>
+    
+    <script>
+        // 페이지 초기화
+        window.addEventListener('DOMContentLoaded', async () => {
+            // 백엔드 초기화
+            const backendReady = await initializeBackends();
+            if (!backendReady) {
+                showToast('백엔드 연결 실패', 'error');
+                return;
+            }
+            
+            // 이벤트 목록 로드
+            loadEvents();
+        });
+        
+        // 이벤트 목록 로드
+        async function loadEvents() {
+            const backends = window.availableBackends || [];
+            const eventsGrid = document.getElementById('eventsGrid');
+            const emptyState = document.getElementById('emptyState');
+            
+            if (backends.length === 0) {
+                eventsGrid.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+            
+            eventsGrid.style.display = 'grid';
+            emptyState.style.display = 'none';
+            
+            // 각 백엔드에서 이벤트 정보 가져오기
+            const eventCards = await Promise.all(backends.map(async (backend) => {
+                try {
+                    // 통계 정보 가져오기
+                    const statsResponse = await api.getStats();
+                    const stats = statsResponse || { total: 0, checkedIn: 0 };
+                    
+                    return createEventCard({
+                        ...backend,
+                        stats: stats,
+                        status: 'active'
+                    });
+                } catch (error) {
+                    console.error(`백엔드 ${backend.port} 정보 로드 실패:`, error);
+                    return createEventCard({
+                        ...backend,
+                        stats: { total: 0, checkedIn: 0 },
+                        status: 'error'
+                    });
+                }
+            }));
+            
+            eventsGrid.innerHTML = eventCards.join('');
+        }
+        
+        // 이벤트 카드 생성
+        function createEventCard(event) {
+            const checkinRate = event.stats.total > 0 
+                ? Math.round((event.stats.checkedIn / event.stats.total) * 100) 
+                : 0;
+            
+            const statusClass = event.status === 'active' ? 'active' : '';
+            const statusText = event.status === 'active' ? '활성' : '오류';
+            
+            return `
+                <div class="event-card" onclick="selectEvent(${event.port})">
+                    <div class="event-card-header">
+                        <div class="event-status ${statusClass}">${statusText}</div>
+                        <div class="event-card-title">${event.eventName}</div>
+                        <div class="event-card-subtitle">${event.eventId}</div>
+                    </div>
+                    <div class="event-card-body">
+                        <div class="event-info">
+                            <div class="event-info-item">
+                                <svg class="event-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>포트: ${event.port}</span>
+                            </div>
+                            <div class="event-info-item">
+                                <svg class="event-info-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                                <span>실시간 업데이트</span>
+                            </div>
+                        </div>
+                        
+                        <div class="event-stats">
+                            <div class="event-stat">
+                                <div class="event-stat-value">${event.stats.total}</div>
+                                <div class="event-stat-label">전체</div>
+                            </div>
+                            <div class="event-stat">
+                                <div class="event-stat-value">${event.stats.checkedIn}</div>
+                                <div class="event-stat-label">체크인</div>
+                            </div>
+                            <div class="event-stat">
+                                <div class="event-stat-value">${checkinRate}%</div>
+                                <div class="event-stat-label">참석률</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="event-card-footer">
+                        <a href="attendees.html" class="event-action" onclick="event.stopPropagation(); selectEvent(${event.port})">
+                            참가자 관리
+                        </a>
+                        <a href="scanner.html" class="event-action" onclick="event.stopPropagation(); selectEvent(${event.port})">
+                            QR 스캔
+                        </a>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 이벤트 선택
+        function selectEvent(port) {
+            localStorage.setItem('selectedBackendPort', port);
+            showToast('이벤트가 선택되었습니다', 'success');
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+</html>

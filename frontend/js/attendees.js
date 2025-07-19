@@ -5,6 +5,7 @@
 let allAttendees = [];
 let currentFilter = 'all';
 let currentSearch = '';
+let selectedAttendees = new Set();
 
 // 참가자 목록 로드
 async function loadAttendees() {
@@ -27,46 +28,108 @@ async function loadStats() {
     }
 }
 
+// 이벤트 옵션 로드
+function loadEventOptions() {
+    const eventSelect = document.getElementById('eventSelect');
+    if (!eventSelect) return;
+    
+    const events = getAvailableEvents();
+    const currentEvent = getCurrentEvent();
+    
+    eventSelect.innerHTML = '<option value="">이벤트 선택</option>' + 
+        events.map(event => `
+            <option value="${event}" ${event === currentEvent ? 'selected' : ''}>
+                ${event}
+            </option>
+        `).join('');
+}
+
+// 이벤트 변경 핸들러
+function handleEventChange() {
+    const eventSelect = document.getElementById('eventSelect');
+    if (eventSelect && eventSelect.value) {
+        setCurrentEvent(eventSelect.value);
+        loadAttendees();
+        loadStats();
+    }
+}
+
 // 참가자 목록 렌더링
 function renderAttendees() {
     const tbody = document.getElementById('attendeesTableBody');
+    const emptyState = document.getElementById('emptyState');
     tbody.innerHTML = '';
     
     // 필터링 적용
     let filteredAttendees = filterByCheckinStatus(allAttendees, currentFilter);
     filteredAttendees = filterAttendees(filteredAttendees, currentSearch);
     
+    // 빈 상태 처리
+    if (filteredAttendees.length === 0) {
+        if (emptyState) emptyState.style.display = 'block';
+        tbody.style.display = 'none';
+        return;
+    } else {
+        if (emptyState) emptyState.style.display = 'none';
+        tbody.style.display = '';
+    }
+    
     // 테이블에 행 추가
     filteredAttendees.forEach(attendee => {
         const tr = document.createElement('tr');
         const isCheckedIn = attendee['체크인'] === 'true';
         
+        // 참가자 이름 첫글자 추출
+        const initials = (attendee['고객명'] || '손님').charAt(0);
+        
         tr.innerHTML = `
-            <td>${attendee['등록번호'] || ''}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '고객명', this)">${attendee['고객명'] || ''}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '회사명', this)">${attendee['회사명'] || ''}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '연락처', this)">${attendee['연락처'] || ''}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '이메일', this)">${attendee['이메일'] || ''}</td>
-            <td class="editable" ondblclick="enableCellEdit('${attendee['등록번호']}', '초대/현장방문', this)">
-                <span class="attendee-type">${attendee['초대/현장방문'] || ''}</span>
-            </td>
-            <td>${formatDate(attendee['체크인시간'])}</td>
             <td>
-                <div class="checkin-toggle ${isCheckedIn ? 'checked' : ''}" 
-                     data-registration="${attendee['등록번호']}"
-                     onclick="toggleAttendeeCheckin('${attendee['등록번호']}')">
-                    ${isCheckedIn ? '✓' : '○'}
+                <input type="checkbox" class="attendee-checkbox" data-registration="${attendee['등록번호']}" onchange="toggleSelectAttendee('${attendee['등록번호']}')" ${selectedAttendees.has(attendee['등록번호']) ? 'checked' : ''}>
+            </td>
+            <td>
+                <div class="table-cell-user">
+                    <div class="table-cell-avatar">${initials}</div>
+                    <div class="table-cell-info">
+                        <div class="table-cell-name">${attendee['고객명'] || '-'}</div>
+                        <div class="table-cell-email">${attendee['이메일'] || '-'}</div>
+                    </div>
                 </div>
             </td>
             <td>
+                <span class="badge badge-primary">${attendee['등록번호']}</span>
+            </td>
+            <td>${attendee['회사명'] || '-'}</td>
+            <td>${attendee['연락처'] || '-'}</td>
+            <td>
+                <span class="badge ${attendee['초대/현장방문'] === '초대' ? 'badge-info' : 'badge-warning'}">
+                    ${attendee['초대/현장방문'] || '미지정'}
+                </span>
+            </td>
+            <td>${formatDate(attendee['체크인시간'])}</td>
+            <td>
+                ${isCheckedIn 
+                    ? '<span class="badge badge-success">체크인 완료</span>' 
+                    : '<span class="badge badge-danger">미체크인</span>'}
+            </td>
+            <td>
                 <div class="action-buttons">
-                    <button class="btn btn-sm btn-generate-qr" 
-                            onclick="generateQRCode('${attendee['등록번호']}', '${attendee['고객명']}')">
-                        QR
+                    <button class="btn btn-icon-sm btn-outline" onclick="toggleAttendeeCheckin('${attendee['등록번호']}')" title="${isCheckedIn ? '체크인 취소' : '체크인하기'}">
+                        ${isCheckedIn 
+                            ? '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>'
+                            : '<svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>'}
                     </button>
-                    <button class="btn btn-sm btn-delete" 
-                            onclick="deleteAttendee('${attendee['등록번호']}')">
-                        삭제
+                    <button class="btn btn-icon-sm btn-outline" onclick="generateQRCode('${attendee['등록번호']}', '${attendee['고객명']}')" title="QR 코드">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                            <rect x="15" y="15" width="5" height="5"></rect>
+                        </svg>
+                    </button>
+                    <button class="btn btn-icon-sm btn-danger" onclick="deleteAttendee('${attendee['등록번호']}')" title="삭제">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M3 6h18m-2 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                        </svg>
                     </button>
                 </div>
             </td>
@@ -908,7 +971,203 @@ function downloadQR() {
     document.body.removeChild(a);
 }
 
+// 전체 선택/해제
+function toggleSelectAll() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.attendee-checkbox');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAllCheckbox.checked;
+        const registrationNumber = checkbox.dataset.registration;
+        if (selectAllCheckbox.checked) {
+            selectedAttendees.add(registrationNumber);
+        } else {
+            selectedAttendees.delete(registrationNumber);
+        }
+    });
+    
+    updateSelectionCounter();
+}
+
+// 개별 참가자 선택/해제
+function toggleSelectAttendee(registrationNumber) {
+    const checkbox = document.querySelector(`input[data-registration="${registrationNumber}"]`);
+    
+    if (checkbox.checked) {
+        selectedAttendees.add(registrationNumber);
+    } else {
+        selectedAttendees.delete(registrationNumber);
+    }
+    
+    updateSelectionCounter();
+    updateSelectAllCheckbox();
+}
+
+// 선택 카운터 업데이트
+function updateSelectionCounter() {
+    const count = selectedAttendees.size;
+    document.getElementById('selectedCount').textContent = count;
+    
+    // 일괄 작업 버튼 표시/숨김
+    const bulkActions = document.getElementById('bulkActions');
+    if (count > 0) {
+        bulkActions.style.display = 'flex';
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+
+// 전체 선택 체크박스 상태 업데이트
+function updateSelectAllCheckbox() {
+    const selectAllCheckbox = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.attendee-checkbox');
+    const checkedCount = document.querySelectorAll('.attendee-checkbox:checked').length;
+    
+    if (checkboxes.length === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === 0) {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = false;
+    } else if (checkedCount === checkboxes.length) {
+        selectAllCheckbox.checked = true;
+        selectAllCheckbox.indeterminate = false;
+    } else {
+        selectAllCheckbox.checked = false;
+        selectAllCheckbox.indeterminate = true;
+    }
+}
+
+// 일괄 삭제
+async function bulkDeleteAttendees() {
+    if (selectedAttendees.size === 0) {
+        showToast('삭제할 참가자를 선택해주세요', 'warning');
+        return;
+    }
+    
+    const confirmMessage = `${selectedAttendees.size}명의 참가자를 정말 삭제하시겠습니까?`;
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${api.baseUrl}/admin/attendees/bulk-delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${api.token}`
+            },
+            body: JSON.stringify({
+                registrationNumbers: Array.from(selectedAttendees)
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast(result.message, 'success');
+            selectedAttendees.clear();
+            await loadAttendees();
+            await loadStats();
+            updateSelectionCounter();
+        } else {
+            showToast(result.error || '일괄 삭제 실패', 'error');
+        }
+    } catch (error) {
+        console.error('일괄 삭제 오류:', error);
+        showToast('일괄 삭제 중 오류가 발생했습니다', 'error');
+    }
+}
+
+// 일괄 체크인/체크인 취소
+async function bulkToggleCheckin(checkinStatus) {
+    if (selectedAttendees.size === 0) {
+        showToast('체크인할 참가자를 선택해주세요', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${api.baseUrl}/admin/attendees/bulk-checkin`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${api.token}`
+            },
+            body: JSON.stringify({
+                registrationNumbers: Array.from(selectedAttendees),
+                checkinStatus: checkinStatus
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showToast(result.message, 'success');
+            await loadAttendees();
+            await loadStats();
+        } else {
+            showToast(result.error || '일괄 체크인 실패', 'error');
+        }
+    } catch (error) {
+        console.error('일괄 체크인 오류:', error);
+        showToast('일괄 체크인 중 오류가 발생했습니다', 'error');
+    }
+}
+
+// QR 일괄 다운로드
+async function bulkDownloadQR() {
+    if (selectedAttendees.size === 0) {
+        showToast('QR을 다운로드할 참가자를 선택해주세요', 'warning');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`${api.baseUrl}/admin/qr/download-zip`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${api.token}`
+            },
+            body: JSON.stringify({
+                registrationNumbers: Array.from(selectedAttendees)
+            })
+        });
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+            a.download = `qr_codes_${timestamp}.zip`;
+            
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            
+            showToast(`${selectedAttendees.size}명의 QR 코드를 다운로드했습니다`, 'success');
+        } else {
+            const error = await response.json();
+            showToast(error.error || 'QR 일괄 다운로드 실패', 'error');
+        }
+    } catch (error) {
+        console.error('QR 일괄 다운로드 오류:', error);
+        showToast('QR 일괄 다운로드 중 오류가 발생했습니다', 'error');
+    }
+}
+
+
 // 전역 스코프에 함수들 노출
 window.generateQRCode = generateQRCode;
 window.closeQRModal = closeQRModal;
 window.downloadQR = downloadQR;
+window.toggleSelectAll = toggleSelectAll;
+window.toggleSelectAttendee = toggleSelectAttendee;
+window.bulkDeleteAttendees = bulkDeleteAttendees;
+window.bulkToggleCheckin = bulkToggleCheckin;
+window.bulkDownloadQR = bulkDownloadQR;
+window.loadEventOptions = loadEventOptions;
+window.handleEventChange = handleEventChange;

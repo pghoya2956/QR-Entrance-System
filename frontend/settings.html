@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>설정 - QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="app-layout">
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">QR</div>
+                    <div class="sidebar-logo-text">입장 관리</div>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">메인 메뉴</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="index.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="attendees.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span>참가자 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="scanner.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                                <span>QR 스캐너</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">이벤트 관리</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="events.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>이벤트 목록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="analytics.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>통계 분석</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">시스템</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="settings.html" class="sidebar-link active">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="backup.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                                <span>백업 관리</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="header-title">설정</h1>
+                    </div>
+                    
+                    <div class="header-right">
+                        <button class="header-btn">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span class="header-notification-badge"></span>
+                        </button>
+                        
+                        <div class="header-user">
+                            <div class="header-user-avatar">관</div>
+                            <div class="header-user-info">
+                                <div class="header-user-name">관리자</div>
+                                <div class="header-user-role">Administrator</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 페이지 콘텐츠 -->
+            <div class="page-content">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h2 class="page-title">시스템 설정</h2>
+                    <p class="page-subtitle">시스템 환경과 사용자 설정을 관리합니다</p>
+                </div>
+                
+                <!-- 설정 섹션 -->
+                <div class="settings-grid">
+                    <!-- 일반 설정 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">일반 설정</h3>
+                        </div>
+                        <div class="settings-section">
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">시스템 언어</div>
+                                    <div class="setting-desc">인터페이스 표시 언어를 선택합니다</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="ko" selected>한국어</option>
+                                    <option value="en">English</option>
+                                    <option value="ja">日本語</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">시간대</div>
+                                    <div class="setting-desc">이벤트 시간 표시를 위한 시간대</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="Asia/Seoul" selected>서울 (GMT+9)</option>
+                                    <option value="Asia/Tokyo">도쿄 (GMT+9)</option>
+                                    <option value="America/New_York">뉴욕 (GMT-5)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">날짜 형식</div>
+                                    <div class="setting-desc">날짜 표시 형식을 선택합니다</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="YYYY-MM-DD" selected>2025-01-01</option>
+                                    <option value="DD/MM/YYYY">01/01/2025</option>
+                                    <option value="MM/DD/YYYY">01/01/2025</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 보안 설정 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">보안 설정</h3>
+                        </div>
+                        <div class="settings-section">
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">2단계 인증</div>
+                                    <div class="setting-desc">추가 보안을 위한 2단계 인증 사용</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">세션 타임아웃</div>
+                                    <div class="setting-desc">비활성 시 자동 로그아웃 시간</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="30">30분</option>
+                                    <option value="60" selected>1시간</option>
+                                    <option value="120">2시간</option>
+                                    <option value="0">사용안함</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">비밀번호 변경</div>
+                                    <div class="setting-desc">관리자 비밀번호를 변경합니다</div>
+                                </div>
+                                <button class="btn btn-outline" onclick="showPasswordModal()">변경</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 알림 설정 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">알림 설정</h3>
+                        </div>
+                        <div class="settings-section">
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">이메일 알림</div>
+                                    <div class="setting-desc">중요 이벤트 발생 시 이메일 수신</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">체크인 알림</div>
+                                    <div class="setting-desc">참가자 체크인 시 실시간 알림</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">일일 리포트</div>
+                                    <div class="setting-desc">매일 이벤트 요약 리포트 수신</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 데이터 관리 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">데이터 관리</h3>
+                        </div>
+                        <div class="settings-section">
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">자동 백업</div>
+                                    <div class="setting-desc">데이터 자동 백업 설정</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" checked>
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">백업 주기</div>
+                                    <div class="setting-desc">자동 백업 실행 주기</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="daily" selected>매일</option>
+                                    <option value="weekly">매주</option>
+                                    <option value="monthly">매월</option>
+                                </select>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">데이터 보관 기간</div>
+                                    <div class="setting-desc">오래된 데이터 자동 삭제 기간</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="30">30일</option>
+                                    <option value="90">90일</option>
+                                    <option value="180">180일</option>
+                                    <option value="365" selected>1년</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 시스템 정보 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">시스템 정보</h3>
+                        </div>
+                        <div class="settings-section">
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">버전</div>
+                                    <div class="setting-desc">현재 시스템 버전</div>
+                                </div>
+                                <div class="setting-value">v2.1.0</div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">데이터베이스</div>
+                                    <div class="setting-desc">데이터베이스 상태</div>
+                                </div>
+                                <div class="setting-value">
+                                    <span class="status-badge success">정상</span>
+                                </div>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">저장소 사용량</div>
+                                    <div class="setting-desc">현재 데이터 저장소 사용량</div>
+                                </div>
+                                <div class="setting-value">
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: 35%;"></div>
+                                    </div>
+                                    <span class="progress-text">35% (3.5GB / 10GB)</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 고급 설정 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">고급 설정</h3>
+                        </div>
+                        <div class="settings-section">
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">개발자 모드</div>
+                                    <div class="setting-desc">디버깅 및 개발 도구 활성화</div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">API 액세스</div>
+                                    <div class="setting-desc">외부 API 접근 설정</div>
+                                </div>
+                                <button class="btn btn-outline" onclick="showAPIModal()">설정</button>
+                            </div>
+                            
+                            <div class="setting-item">
+                                <div class="setting-label">
+                                    <div class="setting-title">로그 레벨</div>
+                                    <div class="setting-desc">시스템 로그 기록 수준</div>
+                                </div>
+                                <select class="setting-control">
+                                    <option value="error">오류만</option>
+                                    <option value="warning" selected>경고 이상</option>
+                                    <option value="info">정보 이상</option>
+                                    <option value="debug">디버그</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 저장 버튼 -->
+                <div class="settings-actions">
+                    <button class="btn btn-outline" onclick="resetSettings()">초기화</button>
+                    <button class="btn btn-primary" onclick="saveSettings()">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                        </svg>
+                        저장
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <style>
+        /* 설정 그리드 */
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+        
+        /* 설정 섹션 */
+        .settings-section {
+            padding: 24px;
+        }
+        
+        /* 설정 항목 */
+        .setting-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+        
+        .setting-label {
+            flex: 1;
+            margin-right: 24px;
+        }
+        
+        .setting-title {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .setting-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .setting-control {
+            min-width: 150px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: white;
+            font-size: 14px;
+        }
+        
+        .setting-value {
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        /* 스위치 토글 */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--primary-color);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* 상태 배지 */
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .status-badge.success {
+            background: var(--success-light);
+            color: var(--success-color);
+        }
+        
+        /* 진행 바 */
+        .progress-bar {
+            width: 200px;
+            height: 8px;
+            background: var(--background);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+        
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* 설정 액션 */
+        .settings-actions {
+            margin-top: 32px;
+            padding-top: 32px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+        
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .setting-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            
+            .setting-control,
+            .setting-value {
+                width: 100%;
+            }
+        }
+    </style>
+    
+    <script src="js/common.js"></script>
+    
+    <script>
+        // 페이지 초기화
+        window.addEventListener('DOMContentLoaded', () => {
+            loadSettings();
+        });
+        
+        // 설정 로드
+        function loadSettings() {
+            // localStorage에서 설정 값 로드
+            const settings = JSON.parse(localStorage.getItem('systemSettings') || '{}');
+            
+            // 설정 값 적용
+            if (settings.language) {
+                document.querySelector('select[value="' + settings.language + '"]').selected = true;
+            }
+            
+            // 스위치 상태 적용
+            document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                const settingName = checkbox.closest('.setting-item').querySelector('.setting-title').textContent;
+                if (settings[settingName] !== undefined) {
+                    checkbox.checked = settings[settingName];
+                }
+            });
+        }
+        
+        // 설정 저장
+        function saveSettings() {
+            const settings = {};
+            
+            // 모든 설정 값 수집
+            document.querySelectorAll('.setting-item').forEach(item => {
+                const title = item.querySelector('.setting-title').textContent;
+                const control = item.querySelector('.setting-control, input[type="checkbox"]');
+                
+                if (control) {
+                    if (control.type === 'checkbox') {
+                        settings[title] = control.checked;
+                    } else {
+                        settings[title] = control.value;
+                    }
+                }
+            });
+            
+            // localStorage에 저장
+            localStorage.setItem('systemSettings', JSON.stringify(settings));
+            
+            showToast('설정이 저장되었습니다', 'success');
+        }
+        
+        // 설정 초기화
+        function resetSettings() {
+            if (confirm('모든 설정을 초기값으로 되돌리시겠습니까?')) {
+                localStorage.removeItem('systemSettings');
+                location.reload();
+            }
+        }
+        
+        // 비밀번호 변경 모달
+        function showPasswordModal() {
+            // 비밀번호 변경 모달 구현
+            showToast('비밀번호 변경 기능은 준비 중입니다', 'info');
+        }
+        
+        // API 설정 모달
+        function showAPIModal() {
+            // API 설정 모달 구현
+            showToast('API 설정 기능은 준비 중입니다', 'info');
+        }
+    </script>
+</body>
+</html>

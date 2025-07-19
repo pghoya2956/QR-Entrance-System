@@ -35,8 +35,11 @@ services:
       - CSV_FIELDS=등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간
       - CSV_REQUIRED=등록번호,고객명,회사명,이메일
       - JWT_SECRET=qr-entrance-secret-key-2025
+      - USE_DATABASE=true
+      - BACKUP_ON_START=false
     volumes:
-      - ./backend/src/data/tech-conference-2025:/app/backend/src/data/tech-conference-2025
+      - ./backend/src/data:/app/backend/src/data
+      - ./backend/src/data/backups:/app/backend/src/data/backups
     networks:
       - qr-network
     healthcheck:
@@ -61,8 +64,11 @@ services:
       - CSV_FIELDS=등록번호,고객명,회사명,이메일,직책,관심분야,체크인,체크인시간
       - CSV_REQUIRED=등록번호,고객명,회사명,이메일
       - JWT_SECRET=qr-entrance-secret-key-2025
+      - USE_DATABASE=true
+      - BACKUP_ON_START=false
     volumes:
-      - ./backend/src/data/startup-meetup-2025:/app/backend/src/data/startup-meetup-2025
+      - ./backend/src/data:/app/backend/src/data
+      - ./backend/src/data/backups:/app/backend/src/data/backups
     networks:
       - qr-network
     healthcheck:

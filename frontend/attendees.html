@@ -7,78 +7,283 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div id="eventSelector"></div>
-    <div id="navigation"></div>
-    
-    <div class="container">
-        <h1>참가자 관리</h1>
-        
-        <!-- 체크인 현황 -->
-        <div class="stats-container">
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-label">전체</div>
-                    <div class="stat-value" id="totalAttendees">-</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">체크인</div>
-                    <div class="stat-value" id="checkedIn">-</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">미체크인</div>
-                    <div class="stat-value" id="notCheckedIn">-</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-label">체크인율</div>
-                    <div class="stat-value" id="checkedInPercentage">-</div>
-                </div>
+    <div class="app-layout">
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">QR</div>
+                    <div class="sidebar-logo-text">입장 관리</div>
+                </a>
             </div>
-        </div>
-        
-        <!-- 파일 관리 -->
-        <div class="file-actions">
-            <button class="btn btn-success" onclick="showAddAttendeeModal()">+ 참가자 추가</button>
-            <button class="btn btn-primary" onclick="api.downloadCSV()">CSV 다운로드</button>
-        </div>
-        
-        <!-- 검색 및 필터 -->
-        <div class="search-filter-section">
-            <input type="text" 
-                   class="search-box" 
-                   id="searchBox"
-                   placeholder="이름, 회사명, 등록번호로 검색...">
             
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="all">전체</button>
-                <button class="filter-btn" data-filter="checked">체크인 완료</button>
-                <button class="filter-btn" data-filter="unchecked">미체크인</button>
-            </div>
-        </div>
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">메인 메뉴</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="index.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="attendees.html" class="sidebar-link active">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span>참가자 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="scanner.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                                <span>QR 스캐너</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">이벤트 관리</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="events.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>이벤트 목록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="analytics.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>통계 분석</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">시스템</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="settings.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="backup.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                                <span>백업 관리</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
         
-        <!-- 참가자 테이블 -->
-        <div class="attendees-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>등록번호</th>
-                        <th>이름</th>
-                        <th>회사명</th>
-                        <th>연락처</th>
-                        <th>이메일</th>
-                        <th>유형</th>
-                        <th>체크인 시간</th>
-                        <th>체크인</th>
-                        <th>액션</th>
-                    </tr>
-                </thead>
-                <tbody id="attendeesTableBody">
-                    <!-- 참가자 목록이 여기에 동적으로 추가됨 -->
-                </tbody>
-            </table>
-        </div>
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="header-title">참가자 관리</h1>
+                        <div class="header-search">
+                            <svg class="header-search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" class="header-search-input" id="globalSearch" placeholder="전체 검색...">
+                        </div>
+                    </div>
+                    
+                    <div class="header-right">
+                        <select class="event-select" id="eventSelect" onchange="handleEventChange()">
+                            <option value="">이벤트 선택</option>
+                        </select>
+                        
+                        <button class="header-btn">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span class="header-notification-badge"></span>
+                        </button>
+                        
+                        <div class="header-user">
+                            <div class="header-user-avatar">관</div>
+                            <div class="header-user-info">
+                                <div class="header-user-name">관리자</div>
+                                <div class="header-user-role">Administrator</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <!-- 페이지 콘텐츠 -->
+            <div class="page-content">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h2 class="page-title">참가자 목록</h2>
+                    <p class="page-subtitle">이벤트 참가자를 관리하고 체크인 상태를 확인합니다</p>
+                </div>
+                
+                <!-- 통계 카드 -->
+                <div class="stats-container">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">전체 참가자</div>
+                                <div class="stat-value" id="totalAttendees">0</div>
+                                <div class="stat-change positive">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>12% 증가</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">👥</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">체크인 완료</div>
+                                <div class="stat-value" id="checkedIn">0</div>
+                                <div class="stat-change positive">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>실시간 업데이트</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">✅</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">미체크인</div>
+                                <div class="stat-value" id="notCheckedIn">0</div>
+                                <div class="stat-change negative">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>대기 중</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">⏳</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">체크인율</div>
+                                <div class="stat-value" id="checkedInPercentage">0%</div>
+                                <div class="stat-change positive">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>목표 달성</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">📊</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 테이블 카드 -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">참가자 목록</h3>
+                        <div class="card-actions">
+                            <button class="btn btn-primary" onclick="showAddAttendeeModal()">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                </svg>
+                                참가자 추가
+                            </button>
+                            <button class="btn btn-outline" onclick="api.downloadCSV()">
+                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                내보내기
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- 검색 및 필터 -->
+                    <div class="search-filter-section">
+                        <div class="search-wrapper">
+                            <svg class="search-icon" width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                            <input type="text" class="search-box" id="searchBox" placeholder="이름, 회사명, 등록번호로 검색...">
+                        </div>
+                        
+                        <div class="filter-buttons">
+                            <button class="filter-btn active" data-filter="all">전체</button>
+                            <button class="filter-btn" data-filter="checked">체크인 완료</button>
+                            <button class="filter-btn" data-filter="unchecked">미체크인</button>
+                        </div>
+                        
+                        <div class="bulk-actions" id="bulkActions" style="display: none;">
+                            <span class="selected-count">선택: <strong id="selectedCount">0</strong>명</span>
+                            <button class="btn btn-sm btn-outline" onclick="bulkDownloadQR()">QR 다운로드</button>
+                            <button class="btn btn-sm btn-outline" onclick="bulkDeleteAttendees()">삭제</button>
+                        </div>
+                    </div>
+                    
+                    <!-- 테이블 -->
+                    <div class="table-container">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px">
+                                        <input type="checkbox" id="selectAll" onchange="toggleSelectAll()">
+                                    </th>
+                                    <th>참가자</th>
+                                    <th>등록번호</th>
+                                    <th>회사</th>
+                                    <th>연락처</th>
+                                    <th>유형</th>
+                                    <th>체크인 시간</th>
+                                    <th>상태</th>
+                                    <th style="width: 120px">액션</th>
+                                </tr>
+                            </thead>
+                            <tbody id="attendeesTableBody">
+                                <!-- 참가자 목록이 여기에 동적으로 추가됨 -->
+                            </tbody>
+                        </table>
+                        <div id="emptyState" class="empty-state" style="display: none;">
+                            <div class="empty-state-icon">📋</div>
+                            <div class="empty-state-title">참가자가 없습니다</div>
+                            <div class="empty-state-desc">위의 '참가자 추가' 버튼을 클릭하여 참가자를 추가해주세요.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
     </div>
-
-    <!-- QR 코드 모달 -->
+    
+    <!-- 모달들 -->
     <div id="qrModal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -87,11 +292,18 @@
             </div>
             <div class="modal-body">
                 <div id="qrCode" class="qr-code-container"></div>
-                <button class="btn btn-primary" onclick="downloadQR()">QR 코드 다운로드</button>
+                <button class="btn btn-primary" onclick="downloadQR()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    QR 코드 다운로드
+                </button>
             </div>
         </div>
     </div>
-
+    
     <!-- 참가자 추가 모달 -->
     <div id="addAttendeeModal" class="modal" style="display: none;">
         <div class="modal-content modal-large">
@@ -103,8 +315,8 @@
                 <!-- 탭 전환 -->
                 <div class="tabs">
                     <button class="tab-button active" onclick="switchTab('individual')">개별 추가</button>
-                    <button class="tab-button" onclick="switchTab('bulk')">일괄 추가 (텍스트)</button>
-                    <button class="tab-button" onclick="switchTab('csv')">CSV 파일 업로드</button>
+                    <button class="tab-button" onclick="switchTab('bulk')">일괄 추가</button>
+                    <button class="tab-button" onclick="switchTab('csv')">CSV 업로드</button>
                 </div>
                 
                 <!-- 개별 추가 탭 -->
@@ -119,68 +331,74 @@
                 
                 <!-- 일괄 추가 탭 -->
                 <div id="bulkTab" class="tab-content" style="display: none;">
-                    <p class="bulk-instruction">엑셀에서 복사한 데이터를 붙여넣으세요 (첫 줄은 헤더)</p>
-                    <div style="background: #f0f0f0; padding: 10px; border-radius: 4px; margin-bottom: 10px; font-size: 0.9em;">
-                        <strong>지원되는 헤더명:</strong><br>
-                        • 이름/성명 → 고객명<br>
-                        • 회사/소속 → 회사명<br>
-                        • 전화/전화번호/휴대폰 → 연락처<br>
-                        • 이메일주소/email → 이메일<br>
-                        • 구분/참가구분/유형 → 초대/현장방문<br>
-                        <small style="color: #666;">※ 탭 또는 쉼표로 구분된 데이터 모두 지원</small>
-                    </div>
-                    <textarea id="bulkAddData" rows="10" 
-                              placeholder="고객명	회사명	이메일	연락처	초대/현장방문
-홍길동	ABC회사	hong@abc.com	010-1234-5678	초대
-김철수	XYZ회사	kim@xyz.com	010-2345-6789	현장방문"
-                              onpaste="handleBulkDataPaste(event)"
-                              oninput="previewBulkData()"></textarea>
-                    <div id="bulkPreview" class="bulk-preview" style="display: none;margin-top: 20px;">
-                        <h3>미리보기</h3>
-                        <div id="bulkPreviewContent"></div>
-                    </div>
+                    <p class="bulk-instruction">엑셀에서 복사한 데이터를 붙여넣으세요</p>
+                    <textarea id="bulkAddData" rows="10" placeholder="고객명	회사명	이메일	연락처	초대/현장방문" oninput="previewBulkData()"></textarea>
+                    <div id="bulkPreview" style="display: none;"></div>
                     <button class="btn btn-primary" onclick="handleBulkAdd()">일괄 추가</button>
-                    <div id="bulkAddResult" class="bulk-result" style="display: none;"></div>
                 </div>
                 
-                <!-- CSV 파일 업로드 탭 -->
+                <!-- CSV 업로드 탭 -->
                 <div id="csvTab" class="tab-content" style="display: none;">
-                    <div class="csv-upload-section">
-                        <p class="csv-instruction">CSV 파일을 선택하여 참가자를 추가하세요</p>
-                        <div class="csv-format-info">
-                            <p><strong>CSV 파일 형식:</strong></p>
-                            <pre>등록번호,고객명,회사명,연락처,이메일,초대/현장방문
-1001,홍길동,ABC회사,010-1234-5678,hong@abc.com,초대
-1002,김철수,XYZ회사,010-2345-6789,kim@xyz.com,초대</pre>
-                        </div>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="csvAddFile" accept=".csv" onchange="handleCSVFileSelect(event)">
-                            <label for="csvAddFile" class="file-input-label">CSV 파일 선택</label>
-                        </div>
-                        <div id="csvPreview" class="csv-preview" style="display: none;">
-                            <h4>미리보기</h4>
-                            <div id="csvPreviewContent"></div>
-                            <button class="btn btn-primary" onclick="confirmCSVUpload()">업로드 진행</button>
-                            <button class="btn btn-secondary" onclick="cancelCSVUpload()">취소</button>
-                        </div>
+                    <div class="file-input-wrapper">
+                        <input type="file" id="csvAddFile" accept=".csv" onchange="handleCSVFileSelect(event)">
+                        <label for="csvAddFile" class="btn btn-primary">CSV 파일 선택</label>
                     </div>
+                    <div id="csvPreview" style="display: none;"></div>
                 </div>
             </div>
         </div>
     </div>
-
+    
     <script src="js/common.js"></script>
     <script src="js/audio-feedback.js"></script>
     <script src="js/attendees.js"></script>
+    
+    <style>
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+        
+        /* 추가 애니메이션 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .stat-card {
+            animation: fadeIn 0.6s ease-out;
+            animation-fill-mode: both;
+        }
+        
+        .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stat-card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+    
     <script>
         // 페이지 초기화
         window.addEventListener('DOMContentLoaded', async () => {
-            // 이벤트 선택기 추가
-            const eventSelectorDiv = document.getElementById('eventSelector');
-            if (eventSelectorDiv) {
-                eventSelectorDiv.appendChild(createEventSelector());
-            }
-            
             // 백엔드 초기화
             const backendReady = await initializeBackends();
             if (!backendReady) {
@@ -188,14 +406,19 @@
                 return;
             }
             
-            // 새로고침 버튼 이벤트
-            document.getElementById('refreshBackends')?.addEventListener('click', async () => {
-                await initializeBackends();
-                showToast('백엔드 목록을 새로고침했습니다.', 'info');
-            });
+            // 이벤트 목록 로드
+            loadEventOptions();
             
-            // 네비게이션 추가
-            document.getElementById('navigation').appendChild(createNavigation('attendees'));
+            // 모바일 메뉴 버튼 추가
+            if (window.innerWidth <= 768) {
+                const mobileMenuBtn = document.createElement('button');
+                mobileMenuBtn.className = 'mobile-menu-btn';
+                mobileMenuBtn.innerHTML = '☰';
+                mobileMenuBtn.onclick = () => {
+                    document.querySelector('.sidebar').classList.toggle('open');
+                };
+                document.querySelector('.header-left').prepend(mobileMenuBtn);
+            }
         });
     </script>
 </body>

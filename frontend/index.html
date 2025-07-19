@@ -10,59 +10,512 @@
     <script src="js/common.js"></script>
 </head>
 <body>
-    <div id="eventSelector"></div>
-    <div id="navigation"></div>
-    
-    <div class="container">
-        <h1>QR 입장 관리 시스템</h1>
+    <div class="app-layout">
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="/" class="sidebar-logo">
+                    <div class="sidebar-logo-icon">QR</div>
+                    <div class="sidebar-logo-text">입장 관리</div>
+                </a>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">메인 메뉴</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="index.html" class="sidebar-link active">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                                </svg>
+                                <span>대시보드</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="attendees.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                </svg>
+                                <span>참가자 관리</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="scanner.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+                                </svg>
+                                <span>QR 스캐너</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">이벤트 관리</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="events.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                </svg>
+                                <span>이벤트 목록</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="analytics.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                                <span>통계 분석</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-section-title">시스템</div>
+                    <ul class="sidebar-menu">
+                        <li class="sidebar-menu-item">
+                            <a href="settings.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                </svg>
+                                <span>설정</span>
+                            </a>
+                        </li>
+                        <li class="sidebar-menu-item">
+                            <a href="backup.html" class="sidebar-link">
+                                <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                </svg>
+                                <span>백업 관리</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
+        </aside>
         
-        <!-- 체크인 현황 -->
-        <div class="stats-container">
-            <div class="stats">
-                <div class="stat-item">
-                    <div class="stat-label">전체</div>
-                    <div class="stat-value" id="totalAttendees">-</div>
+        <!-- 메인 콘텐츠 영역 -->
+        <main class="main-content">
+            <!-- 헤더 -->
+            <header class="header">
+                <div class="header-content">
+                    <div class="header-left">
+                        <h1 class="header-title">대시보드</h1>
+                    </div>
+                    
+                    <div class="header-right">
+                        <select class="event-select" id="eventSelect" onchange="handleEventChange()">
+                            <option value="">이벤트 선택</option>
+                        </select>
+                        
+                        <button class="header-btn">
+                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+                            </svg>
+                            <span class="header-notification-badge"></span>
+                        </button>
+                        
+                        <div class="header-user">
+                            <div class="header-user-avatar">관</div>
+                            <div class="header-user-info">
+                                <div class="header-user-name">관리자</div>
+                                <div class="header-user-role">Administrator</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">체크인</div>
-                    <div class="stat-value" id="checkedIn">-</div>
+            </header>
+            
+            <!-- 페이지 콘텐츠 -->
+            <div class="page-content">
+                <!-- 페이지 헤더 -->
+                <div class="page-header">
+                    <h2 class="page-title">QR 입장 관리 시스템</h2>
+                    <p class="page-subtitle">실시간 체크인 현황과 QR 코드 스캐너</p>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">미체크인</div>
-                    <div class="stat-value" id="notCheckedIn">-</div>
+                
+                <!-- 통계 카드 -->
+                <div class="stats-container">
+                    <div class="stat-card primary">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">전체 참가자</div>
+                                <div class="stat-value" id="totalAttendees">0</div>
+                                <div class="stat-change positive">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>등록 완료</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">👥</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card success">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">체크인 완료</div>
+                                <div class="stat-value" id="checkedIn">0</div>
+                                <div class="stat-change positive">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>입장 완료</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">✅</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card warning">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">미체크인</div>
+                                <div class="stat-value" id="notCheckedIn">0</div>
+                                <div class="stat-change negative">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M14.707 10.293a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 111.414-1.414L9 12.586V5a1 1 0 012 0v7.586l2.293-2.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>대기 중</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">⏳</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card info">
+                        <div class="stat-header">
+                            <div class="stat-content">
+                                <div class="stat-label">체크인율</div>
+                                <div class="stat-value" id="checkedInPercentage">0%</div>
+                                <div class="stat-change positive">
+                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    <span>진행 중</span>
+                                </div>
+                            </div>
+                            <div class="stat-icon">📊</div>
+                        </div>
+                    </div>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-label">체크인율</div>
-                    <div class="stat-value" id="checkedInPercentage">-</div>
+                
+                <div class="main-layout">
+                    <!-- QR 스캐너 카드 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">QR 코드 스캐너</h3>
+                            <div class="card-actions">
+                                <button class="btn btn-sm btn-outline" onclick="toggleCamera()">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                    </svg>
+                                    카메라 전환
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div id="reader">
+                            <div class="scanner-frame" id="scannerFrame"></div>
+                        </div>
+                        <div id="status" class="scanner-status">카메라 준비 중...</div>
+                        <div id="resultDisplay" class="result-display"></div>
+                    </div>
+                    
+                    <!-- 최근 체크인 카드 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">최근 체크인</h3>
+                            <div class="card-actions">
+                                <span class="badge badge-info" id="recentCount">0</span>
+                            </div>
+                        </div>
+                        
+                        <div id="recentCheckins" class="recent-checkins">
+                            <div class="empty-state">
+                                <div class="empty-state-icon">📋</div>
+                                <div class="empty-state-title">체크인 대기 중</div>
+                                <div class="empty-state-desc">QR 코드를 스캔하면 여기에 표시됩니다</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 빠른 작업 카드 -->
+                <div class="quick-actions-container">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">빠른 작업</h3>
+                        </div>
+                        
+                        <div class="quick-actions">
+                            <a href="attendees.html" class="quick-action-item">
+                                <div class="quick-action-icon primary">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="quick-action-label">참가자 관리</div>
+                            </a>
+                            
+                            <button class="quick-action-item" onclick="exportTodayData()">
+                                <div class="quick-action-icon success">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                    </svg>
+                                </div>
+                                <div class="quick-action-label">데이터 내보내기</div>
+                            </button>
+                            
+                            <button class="quick-action-item" onclick="resetScanner()">
+                                <div class="quick-action-icon warning">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                </div>
+                                <div class="quick-action-label">스캐너 재시작</div>
+                            </button>
+                            
+                            <button class="quick-action-item" onclick="showHelp()">
+                                <div class="quick-action-icon info">
+                                    <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                </div>
+                                <div class="quick-action-label">도움말</div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="main-layout">
-            <!-- QR 스캐너 섹션 -->
-            <div class="scanner-section">
-                <h2>QR 스캐너</h2>
-                <div id="reader">
-                    <div class="scanner-frame" id="scannerFrame"></div>
-                </div>
-                <div id="status">카메라 준비 중...</div>
-                <div id="resultDisplay" class="result-display"></div>
-            </div>
-
-            <!-- 참석자 목록 섹션 -->
-            <div class="attendees-section">
-                <h2>참석자 목록</h2>
-                <div id="attendeesList" class="attendees-list"></div>
-            </div>
-        </div>
+        </main>
     </div>
-
+    
+    <style>
+        /* 메인 레이아웃 */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* 스캐너 스타일 */
+        #reader {
+            min-height: 400px;
+            position: relative;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .scanner-status {
+            text-align: center;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+        
+        .scanner-frame {
+            position: absolute;
+            top: 50%!important;
+            left: 50%!important;
+            transform: translate(-50%, -50%)!important;
+            width: 300px;
+            height: 300px;
+            border: 3px solid var(--primary-color);
+            border-radius: var(--border-radius);
+            box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.3);
+            transition: var(--transition);
+            display: none;
+        }
+        
+        .scanner-frame.detecting {
+            border-color: var(--warning-color);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
+        }
+        
+        .scanner-frame.success {
+            border-color: var(--success-color);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
+        }
+        
+        .scanner-frame.error {
+            border-color: var(--danger-color);
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 최근 체크인 */
+        .recent-checkins {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .checkin-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            transition: var(--transition);
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .checkin-item:last-child {
+            border-bottom: none;
+        }
+        
+        .checkin-item:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .checkin-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .checkin-item-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .checkin-item-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .checkin-item-details {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+        
+        .checkin-item-badge {
+            display: inline-block;
+            margin-top: 0.5rem;
+        }
+        
+        /* 빠른 작업 */
+        .quick-actions-container {
+            margin-top: 2rem;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        
+        .quick-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.5rem;
+            background: var(--bg-tertiary);
+            border-radius: var(--border-radius);
+            border: 1px solid var(--border-color);
+            transition: var(--transition);
+            cursor: pointer;
+            text-decoration: none;
+            color: var(--text-primary);
+        }
+        
+        .quick-action-item:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--primary-color);
+        }
+        
+        .quick-action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--border-radius);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .quick-action-icon.primary {
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        
+        .quick-action-icon.success {
+            background: var(--success-light);
+            color: var(--success-color);
+        }
+        
+        .quick-action-icon.warning {
+            background: var(--warning-light);
+            color: var(--warning-color);
+        }
+        
+        .quick-action-icon.info {
+            background: var(--info-light);
+            color: var(--info-color);
+        }
+        
+        .quick-action-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        /* 모바일 반응형 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .quick-actions {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        /* 애니메이션 */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+    
     <script>
         let html5QrCode = null;
         let isScanning = false;
         const recentScans = new Map();
         const SCAN_COOLDOWN = 3000;
-
+        const recentCheckins = [];
+        const MAX_RECENT_CHECKINS = 10;
+        
         // 통계 로드
         async function loadStats() {
             try {
@@ -77,55 +530,85 @@
                 console.error('통계 로딩 실패:', error);
             }
         }
-
-        // 참석자 목록 로드
-        async function loadAttendees() {
-            try {
-                const response = await fetch(getApiUrl('/api/admin/attendees'));
-                const attendees = await response.json();
-                
-                const attendeesList = document.getElementById('attendeesList');
-                attendeesList.innerHTML = '';
-                
-                attendees.forEach(attendee => {
-                    const item = document.createElement('div');
-                    item.className = 'attendee-item';
-                    const checkedInClass = attendee['체크인'] === 'true' ? 'checked-in' : 'not-checked-in';
-                    item.innerHTML = `
-                        <div class="attendee-info">
-                            <strong>${attendee['고객명']}</strong> (${attendee['등록번호']})
-                            <br><small>${attendee['회사명']} | ${attendee['연락처']}</small>
-                            <br><small class="attendee-type">${attendee['초대/현장방문']}</small>
-                        </div>
-                        <div class="${checkedInClass}">
-                            ${attendee['체크인'] === 'true' ? '✓' : '○'}
-                        </div>
-                    `;
-                    attendeesList.appendChild(item);
-                });
-            } catch (error) {
-                console.error('참석자 목록 로딩 실패:', error);
+        
+        // 최근 체크인 목록 업데이트
+        function updateRecentCheckins(attendeeInfo, isSuccess = true) {
+            const now = new Date();
+            const checkin = {
+                ...attendeeInfo,
+                time: now,
+                success: isSuccess
+            };
+            
+            recentCheckins.unshift(checkin);
+            if (recentCheckins.length > MAX_RECENT_CHECKINS) {
+                recentCheckins.pop();
             }
+            
+            renderRecentCheckins();
+            updateRecentCount();
         }
-
+        
+        // 최근 체크인 수 업데이트
+        function updateRecentCount() {
+            document.getElementById('recentCount').textContent = recentCheckins.length;
+        }
+        
+        // 최근 체크인 목록 렌더링
+        function renderRecentCheckins() {
+            const container = document.getElementById('recentCheckins');
+            
+            if (recentCheckins.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📋</div>
+                        <div class="empty-state-title">체크인 대기 중</div>
+                        <div class="empty-state-desc">QR 코드를 스캔하면 여기에 표시됩니다</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            container.innerHTML = recentCheckins.map(checkin => `
+                <div class="checkin-item">
+                    <div class="checkin-item-header">
+                        <span class="checkin-item-name">${checkin.name}</span>
+                        <span class="checkin-item-time">${formatTime(checkin.time)}</span>
+                    </div>
+                    <div class="checkin-item-details">
+                        ${checkin.company} · ${checkin.registrationNumber}
+                    </div>
+                    <span class="checkin-item-badge badge ${checkin.success ? 'badge-success' : 'badge-warning'}">
+                        ${checkin.success ? '체크인 완료' : '이미 체크인됨'}
+                    </span>
+                </div>
+            `).join('');
+        }
+        
+        // 시간 포맷팅
+        function formatTime(date) {
+            const hours = date.getHours().toString().padStart(2, '0');
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const seconds = date.getSeconds().toString().padStart(2, '0');
+            return `${hours}:${minutes}:${seconds}`;
+        }
+        
         // 스캐너 프레임 색상 변경
         function setFrameState(state) {
             const frame = document.getElementById('scannerFrame');
-            if (!frame) {
-                console.error('scannerFrame 요소를 찾을 수 없습니다');
-                return;
-            }
+            if (!frame) return;
+            
             frame.className = 'scanner-frame';
             if (state) {
                 frame.classList.add(state);
             }
         }
-
+        
         // 결과 표시
         function showResult(message, type) {
             const resultDiv = document.getElementById('resultDisplay');
             resultDiv.style.display = 'block';
-            resultDiv.className = `result-display result-${type}`;
+            resultDiv.className = `result-display result-${type} fade-in`;
             resultDiv.innerHTML = message;
             
             setFrameState(type === 'warning' ? 'detecting' : type);
@@ -138,7 +621,7 @@
                 resultDiv.style.display = 'none';
             }, 3000);
         }
-
+        
         // 체크인 처리
         async function processCheckin(qrData) {
             try {
@@ -157,11 +640,12 @@
                 if (response.ok) {
                     showResult(`✓ ${result.attendeeInfo.name}님 체크인 완료!<br><small>${result.attendeeInfo.company}</small>`, 'success');
                     audioFeedback.success();
+                    updateRecentCheckins(result.attendeeInfo, true);
                     loadStats();
-                    loadAttendees();
                 } else if (response.status === 409) {
                     showResult(`⚠ ${result.attendeeInfo.name}님은 이미 체크인됨<br><small>${result.attendeeInfo.company}</small>`, 'warning');
                     audioFeedback.duplicate();
+                    updateRecentCheckins(result.attendeeInfo, false);
                 } else {
                     showResult(`✗ ${result.error}`, 'error');
                     audioFeedback.error();
@@ -172,7 +656,7 @@
                 audioFeedback.networkError();
             }
         }
-
+        
         // QR 스캔 성공 핸들러
         function onScanSuccess(decodedText, decodedResult) {
             const lastScan = recentScans.get(decodedText);
@@ -194,12 +678,12 @@
             
             processCheckin(decodedText);
         }
-
+        
         // QR 스캔 실패 핸들러
         function onScanFailure(error) {
             // 스캔 실패는 무시
         }
-
+        
         // 스캐너 시작
         async function startScanning() {
             try {
@@ -210,14 +694,7 @@
                 const config = {
                     fps: 10,
                     qrbox: { width: 350, height: 350 },
-                    aspectRatio: 1.0,
-                    videoConstraints: {
-                        facingMode: "environment",
-                        advanced: [{
-                            // 좌우반전 적용
-                            mirrored: true
-                        }]
-                    }
+                    aspectRatio: 1.0
                 };
                 
                 document.getElementById('status').textContent = '카메라 시작 중...';
@@ -229,12 +706,6 @@
                     onScanFailure
                 );
                 
-                // 비디오 요소에 좌우반전 CSS 적용
-                const video = document.querySelector('#reader video');
-                if (video) {
-                    video.style.transform = 'scaleX(-1)';
-                }
-                
                 isScanning = true;
                 document.getElementById('status').textContent = 'QR 코드를 스캔하세요';
                 console.log('스캐너 시작됨');
@@ -245,7 +716,7 @@
                 audioFeedback.error();
             }
         }
-
+        
         // 스캐너 중지
         async function stopScanning() {
             try {
@@ -258,16 +729,68 @@
                 console.error('스캐너 중지 실패:', err);
             }
         }
-
+        
+        // 카메라 전환
+        async function toggleCamera() {
+            if (isScanning) {
+                await stopScanning();
+                await startScanning();
+            }
+        }
+        
+        // 스캐너 재시작
+        async function resetScanner() {
+            await stopScanning();
+            setTimeout(() => {
+                startScanning();
+            }, 500);
+        }
+        
+        // 오늘 데이터 내보내기
+        async function exportTodayData() {
+            try {
+                const response = await fetch(getApiUrl('/api/admin/csv/download'));
+                if (!response.ok) throw new Error('다운로드 실패');
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `attendees_${new Date().toISOString().split('T')[0]}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showToast('CSV 파일을 다운로드했습니다', 'success');
+            } catch (error) {
+                console.error('다운로드 실패:', error);
+                showToast('다운로드에 실패했습니다', 'error');
+            }
+        }
+        
+        // 도움말 표시
+        function showHelp() {
+            alert('QR 입장 관리 시스템 도움말\n\n' +
+                  '1. QR 코드를 카메라에 비추세요\n' +
+                  '2. 자동으로 체크인이 처리됩니다\n' +
+                  '3. 중복 체크인은 경고가 표시됩니다\n\n' +
+                  '문제가 있으면 관리자에게 문의하세요');
+        }
+        
+        // 이벤트 변경 핸들러
+        function handleEventChange() {
+            const eventSelect = document.getElementById('eventSelect');
+            if (eventSelect && eventSelect.value) {
+                setCurrentEvent(eventSelect.value);
+                loadStats();
+                // 스캐너는 재시작하지 않음 (계속 실행)
+            }
+        }
+        
         // 페이지 로드 시 초기화
         window.addEventListener('DOMContentLoaded', async () => {
             console.log('통합 QR 시스템 시작');
-            
-            // 이벤트 선택기 추가
-            const eventSelectorDiv = document.getElementById('eventSelector');
-            if (eventSelectorDiv) {
-                eventSelectorDiv.appendChild(createEventSelector());
-            }
             
             // 백엔드 초기화
             const backendReady = await initializeBackends();
@@ -276,11 +799,10 @@
                 return;
             }
             
-            // 새로고침 버튼 이벤트
-            document.getElementById('refreshBackends')?.addEventListener('click', async () => {
-                await initializeBackends();
-                showToast('백엔드 목록을 새로고침했습니다.', 'info');
-            });
+            // 이벤트 목록 로드
+            if (window.loadEventOptions) {
+                window.loadEventOptions();
+            }
             
             // 오디오 초기화를 위한 첫 클릭 이벤트
             document.addEventListener('click', () => {
@@ -289,20 +811,31 @@
             
             // 초기 데이터 로드
             loadStats();
-            loadAttendees();
+            renderRecentCheckins();
             
             // 자동으로 스캐너 시작
             startScanning();
             
             // 5초마다 통계 업데이트
             setInterval(loadStats, 5000);
+            
+            // 모바일 메뉴 버튼 추가
+            if (window.innerWidth <= 768) {
+                const mobileMenuBtn = document.createElement('button');
+                mobileMenuBtn.className = 'mobile-menu-btn';
+                mobileMenuBtn.innerHTML = '☰';
+                mobileMenuBtn.onclick = () => {
+                    document.querySelector('.sidebar').classList.toggle('open');
+                };
+                document.querySelector('.header-left').prepend(mobileMenuBtn);
+            }
         });
-
+        
         // 페이지 종료 시 정리
         window.addEventListener('beforeunload', () => {
             stopScanning();
         });
-
+        
         // 페이지 숨김/표시 처리
         document.addEventListener('visibilitychange', () => {
             if (document.hidden && isScanning) {
@@ -311,9 +844,6 @@
                 startScanning();
             }
         });
-        
-        // 네비게이션 추가
-        document.getElementById('navigation').appendChild(createNavigation('home'));
     </script>
 </body>
 </html>

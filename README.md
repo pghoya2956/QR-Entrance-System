@@ -18,7 +18,8 @@ QR 코드를 활용한 행사 참석자 입장 관리 웹 애플리케이션입�
 - Node.js
 - Express.js
 - JWT (JSON Web Token)
-- CSV 파일 기반 데이터 저장
+- SQLite 데이터베이스 (v2.1 신규)
+- CSV 파일 기반 데이터 저장 (하이브리드 지원)
 
 ### 프론트엔드
 - HTML5/CSS3/JavaScript (Vanilla)
@@ -27,6 +28,7 @@ QR 코드를 활용한 행사 참석자 입장 관리 웹 애플리케이션입�
 
 ### 테스트
 - Playwright
+- Jest (단위 테스트)
 
 ## 설치 방법
 
@@ -49,7 +51,9 @@ npx playwright install chromium
 4. 환경 변수 설정
 ```bash
 # .env 파일이 이미 생성되어 있습니다
-# 필요시 JWT_SECRET 변경 가능
+# 필요시 설정 변경 가능
+USE_DATABASE=true  # true: SQLite 모드 (권장), false: CSV 모드
+JWT_SECRET=qr-entrance-secret-key-2025
 ```
 
 ## 실행 방법
@@ -229,6 +233,8 @@ docker-compose logs -f [서비스명]
 - `POST /api/admin/reset` - 체크인 데이터 초기화
 - `GET /api/admin/export-csv` - CSV 파일 다운로드
 - `POST /api/admin/import-csv` - CSV 파일 업로드
+- `GET /api/admin/backups` - 백업 목록 조회 (DB 모드 전용)
+- `POST /api/admin/backup` - 수동 백업 생성 (DB 모드 전용)
 
 ## 프로젝트 구조
 
@@ -243,7 +249,12 @@ qr-entrance-system/
 │       │   └── admin.js       # 관리자 기능
 │       ├── services/          # 비즈니스 로직
 │       │   ├── csvService.js  # CSV 파일 처리
+│       │   ├── dbService.js   # SQLite 데이터베이스 처리
+│       │   ├── backupService.js # 백업 서비스
 │       │   └── qrService.js   # QR 코드 생성/검증
+│       ├── migrations/        # 데이터베이스 마이그레이션
+│       │   ├── 001-initial-schema.sql
+│       │   └── migrate.js
 │       └── data/              # 이벤트별 데이터 디렉토리
 │           ├── default-event/
 │           │   └── attendees.csv
@@ -339,6 +350,33 @@ QR 코드는 다음 형식으로 생성됩니다:
 - 체크인 필드는 "true" 또는 "false" 문자열로 저장됩니다
 - 미체크인 시 체크인시간은 빈 값으로 유지됩니다
 
+## 데이터베이스 운영 가이드
+
+### 데이터베이스 마이그레이션
+```bash
+# 마이그레이션 상태 확인
+npm run migrate:status
+
+# CSV → SQLite 마이그레이션 실행
+npm run migrate
+```
+
+### 운영 모드 전환
+```bash
+# SQLite 데이터베이스 모드 (권장)
+USE_DATABASE=true
+
+# CSV 파일 모드 (레거시)
+USE_DATABASE=false
+```
+
+### 백업 관리
+- **자동 백업**: 매일 새벽 2시 자동 실행
+- **수동 백업**: `POST /api/admin/backup` 호출
+- **백업 위치**: `backend/src/data/backups/`
+- **백업 형식**: `attendees_backup_YYYYMMDD_HHMMSS.db.gz`
+- **보관 기간**: 30일 (자동 삭제)
+
 ## 보안 고려사항
 
 - JWT 토큰을 사용한 QR 코드 생성
@@ -387,9 +425,23 @@ QR 코드는 다음 형식으로 생성됩니다:
   - 체크인 상태는 문자열: `"true"` / `"false"` (boolean 아님)
   - 이벤트 선택 후 3초 대기 권장 (초기화 완료 대기)
 
-## 최근 개선사항 (2025-07-17)
+## 최근 개선사항 (2025-07-18)
 
-### 구현 완료 기능
+### SQLite 데이터베이스 통합
+- ✅ **데이터베이스 마이그레이션**: CSV 파일에서 SQLite 데이터베이스로 전환
+  - 트랜잭션 지원으로 데이터 무결성 보장
+  - WAL 모드로 동시 접근 개선
+  - 인덱스 자동 생성으로 성능 최적화
+- ✅ **자동 백업 시스템**: 매일 새벽 2시 자동 백업
+  - gzip 압축으로 저장 공간 절약
+  - 30일 보관 정책
+  - 수동 백업 API 제공
+- ✅ **하이브리드 운영**: CSV와 DB 모드 동시 지원
+  - USE_DATABASE 환경변수로 모드 전환
+  - 기존 CSV 시스템과 100% 호환
+  - CSV 가져오기/내보내기 유지
+
+### 이전 개선사항 (2025-07-17)
 - ✅ **QR 코드 생성 API**: `/api/qr/generate/:registrationNumber` 엔드포인트 구현
 - ✅ **QR 코드 생성 UI**: 참석자별 QR 생성 버튼, 모달 팝업, 다운로드 기능
 - ✅ **체크인 토글 기능**: 참석자 목록에서 체크인 상태를 클릭하여 변경
@@ -408,6 +460,8 @@ QR 코드는 다음 형식으로 생성됩니다:
 - [x] 유연한 CSV 형식 (v2.0 완료)
 - [x] QR 코드 생성 UI (v2.1 완료)
 - [x] QR 코드 생성 API 구현 (v2.1 완료)
+- [x] SQLite 데이터베이스 통합 (v2.1 완료)
+- [x] 자동 백업 시스템 (v2.1 완료)
 - [ ] Frontend health check 수정
 - [ ] 백엔드 디스커버리 안정화
 - [ ] 테스트 데이터 격리 개선

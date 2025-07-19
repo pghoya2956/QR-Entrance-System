@@ -1,0 +1,450 @@
+const sqlite3 = require('sqlite3').verbose();
+const path = require('path');
+const fs = require('fs').promises;
+
+class DBService {
+  constructor() {
+    this.dbPath = path.join(__dirname, '../data/qr-entrance.db');
+    this.dataDir = path.join(__dirname, '../data');
+    this.db = null;
+    
+    // CSV 필드 매핑 (환경변수와 동일하게 유지)
+    this.csvFields = (process.env.CSV_FIELDS || '등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간').split(',').map(f => f.trim());
+    this.requiredFields = (process.env.CSV_REQUIRED || '등록번호,고객명,회사명,이메일').split(',').map(f => f.trim());
+    
+    this.initDatabase();
+  }
+
+  async ensureDataDirectory() {
+    try {
+      await fs.mkdir(this.dataDir, { recursive: true });
+    } catch (error) {
+      console.error('데이터 디렉토리 생성 오류:', error);
+    }
+  }
+
+  initDatabase() {
+    try {
+      // 데이터베이스 연결
+      this.db = new Database(this.dbPath);
+      
+      // WAL 모드 활성화
+      this.db.pragma('journal_mode = WAL');
+      
+      // 외래 키 제약 조건 활성화
+      this.db.pragma('foreign_keys = ON');
+      
+      // 테이블 생성
+      this.createTables();
+      
+      console.log('✅ SQLite 데이터베이스 초기화 완료');
+    } catch (error) {
+      console.error('데이터베이스 초기화 오류:', error);
+      throw error;
+    }
+  }
+
+  createTables() {
+    const createTableSQL = `
+      CREATE TABLE IF NOT EXISTS attendees (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        event_id TEXT NOT NULL,
+        registration_number TEXT NOT NULL,
+        name TEXT NOT NULL,
+        company TEXT NOT NULL,
+        contact TEXT,
+        email TEXT NOT NULL,
+        invitation_type TEXT,
+        checked_in INTEGER DEFAULT 0,
+        checkin_time TEXT,
+        created_at TEXT DEFAULT (datetime('now', 'localtime')),
+        updated_at TEXT DEFAULT (datetime('now', 'localtime')),
+        UNIQUE(event_id, registration_number),
+        UNIQUE(event_id, email)
+      );
+      
+      CREATE INDEX IF NOT EXISTS idx_event_id ON attendees(event_id);
+      CREATE INDEX IF NOT EXISTS idx_checked_in ON attendees(event_id, checked_in);
+      CREATE INDEX IF NOT EXISTS idx_registration ON attendees(event_id, registration_number);
+    `;
+    
+    this.db.exec(createTableSQL);
+  }
+
+  // CSV 필드명을 DB 컬럼명으로 매핑
+  mapCsvToDb(csvData) {
+    return {
+      registration_number: csvData['등록번호'],
+      name: csvData['고객명'],
+      company: csvData['회사명'],
+      contact: csvData['연락처'] || '',
+      email: csvData['이메일'],
+      invitation_type: csvData['초대/현장방문'] || '',
+      checked_in: csvData['체크인'] === 'true' ? 1 : 0,
+      checkin_time: csvData['체크인시간'] || null
+    };
+  }
+
+  // DB 컬럼명을 CSV 필드명으로 매핑
+  mapDbToCsv(dbData) {
+    return {
+      '등록번호': dbData.registration_number,
+      '고객명': dbData.name,
+      '회사명': dbData.company,
+      '연락처': dbData.contact || '',
+      '이메일': dbData.email,
+      '초대/현장방문': dbData.invitation_type || '',
+      '체크인': dbData.checked_in ? 'true' : 'false',
+      '체크인시간': dbData.checkin_time || ''
+    };
+  }
+
+  async readAttendees(eventId = null) {
+    try {
+      const eventIdToUse = eventId || process.env.EVENT_ID || 'default-event';
+      
+      const stmt = this.db.prepare(`
+        SELECT * FROM attendees 
+        WHERE event_id = ? 
+        ORDER BY registration_number
+      `);
+      
+      const rows = stmt.all(eventIdToUse);
+      
+      // CSV 형식으로 변환하여 반환 (기존 API와 호환성 유지)
+      return rows.map(row => this.mapDbToCsv(row));
+    } catch (error) {
+      console.error('참석자 조회 오류:', error);
+      return [];
+    }
+  }
+
+  async writeAttendees(attendees, eventId = null) {
+    const eventIdToUse = eventId || process.env.EVENT_ID || 'default-event';
+    
+    try {
+      // 트랜잭션 시작
+      const deleteStmt = this.db.prepare('DELETE FROM attendees WHERE event_id = ?');
+      const insertStmt = this.db.prepare(`
+        INSERT INTO attendees (
+          event_id, registration_number, name, company, contact, 
+          email, invitation_type, checked_in, checkin_time
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      const transaction = this.db.transaction((attendeesList) => {
+        // 기존 데이터 삭제
+        deleteStmt.run(eventIdToUse);
+        
+        // 새 데이터 삽입
+        for (const attendee of attendeesList) {
+          const dbData = this.mapCsvToDb(attendee);
+          insertStmt.run(
+            eventIdToUse,
+            dbData.registration_number,
+            dbData.name,
+            dbData.company,
+            dbData.contact,
+            dbData.email,
+            dbData.invitation_type,
+            dbData.checked_in,
+            dbData.checkin_time
+          );
+        }
+      });
+      
+      transaction(attendees);
+      return true;
+    } catch (error) {
+      console.error('참석자 저장 오류:', error);
+      return false;
+    }
+  }
+
+  async updateAttendee(registrationNumber, updates, eventId = null) {
+    const eventIdToUse = eventId || process.env.EVENT_ID || 'default-event';
+    
+    try {
+      // 현재 참석자 정보 가져오기
+      const getStmt = this.db.prepare(`
+        SELECT * FROM attendees 
+        WHERE event_id = ? AND registration_number = ?
+      `);
+      
+      const attendee = getStmt.get(eventIdToUse, registrationNumber);
+      
+      if (!attendee) {
+        return null;
+      }
+      
+      // 업데이트 데이터 준비
+      const updateData = this.mapCsvToDb(updates);
+      const updateFields = [];
+      const updateValues = [];
+      
+      // 업데이트할 필드만 동적으로 구성
+      if (updates['고객명'] !== undefined) {
+        updateFields.push('name = ?');
+        updateValues.push(updateData.name);
+      }
+      if (updates['회사명'] !== undefined) {
+        updateFields.push('company = ?');
+        updateValues.push(updateData.company);
+      }
+      if (updates['연락처'] !== undefined) {
+        updateFields.push('contact = ?');
+        updateValues.push(updateData.contact);
+      }
+      if (updates['이메일'] !== undefined) {
+        updateFields.push('email = ?');
+        updateValues.push(updateData.email);
+      }
+      if (updates['초대/현장방문'] !== undefined) {
+        updateFields.push('invitation_type = ?');
+        updateValues.push(updateData.invitation_type);
+      }
+      if (updates['체크인'] !== undefined) {
+        updateFields.push('checked_in = ?');
+        updateValues.push(updateData.checked_in);
+      }
+      if (updates['체크인시간'] !== undefined) {
+        updateFields.push('checkin_time = ?');
+        updateValues.push(updateData.checkin_time);
+      }
+      
+      if (updateFields.length === 0) {
+        return this.mapDbToCsv(attendee);
+      }
+      
+      // updated_at 추가
+      updateFields.push("updated_at = datetime('now', 'localtime')");
+      
+      // 업데이트 실행
+      const updateSQL = `
+        UPDATE attendees 
+        SET ${updateFields.join(', ')}
+        WHERE event_id = ? AND registration_number = ?
+      `;
+      
+      updateValues.push(eventIdToUse, registrationNumber);
+      
+      const updateStmt = this.db.prepare(updateSQL);
+      updateStmt.run(...updateValues);
+      
+      // 업데이트된 데이터 반환
+      const updatedAttendee = getStmt.get(eventIdToUse, registrationNumber);
+      return this.mapDbToCsv(updatedAttendee);
+    } catch (error) {
+      console.error('참석자 업데이트 오류:', error);
+      return null;
+    }
+  }
+
+  async getAttendeeByRegistrationNumber(registrationNumber, eventId = null) {
+    const eventIdToUse = eventId || process.env.EVENT_ID || 'default-event';
+    
+    try {
+      const stmt = this.db.prepare(`
+        SELECT * FROM attendees 
+        WHERE event_id = ? AND registration_number = ?
+      `);
+      
+      const attendee = stmt.get(eventIdToUse, registrationNumber);
+      
+      return attendee ? this.mapDbToCsv(attendee) : null;
+    } catch (error) {
+      console.error('참석자 조회 오류:', error);
+      return null;
+    }
+  }
+
+  async generateCSV(attendees) {
+    try {
+      let csvContent = this.csvFields.join(',') + '\n';
+      
+      attendees.forEach(attendee => {
+        const row = this.csvFields.map(field => {
+          const value = attendee[field] || '';
+          // 쉼표나 줄바꿈이 있으면 큰따옴표로 감싸기
+          return value.includes(',') || value.includes('\n') ? `"${value}"` : value;
+        }).join(',');
+        csvContent += row + '\n';
+      });
+      
+      return csvContent;
+    } catch (error) {
+      console.error('CSV 생성 오류:', error);
+      throw error;
+    }
+  }
+
+  async parseCSV(csvContent) {
+    try {
+      const lines = csvContent.trim().split('\n');
+      if (lines.length < 2) {
+        throw new Error('CSV 파일에 데이터가 없습니다.');
+      }
+      
+      const uploadHeaders = lines[0].split(',').map(h => h.trim());
+      
+      // 필수 필드 검증
+      const missingFields = this.requiredFields.filter(field => 
+        !uploadHeaders.includes(field)
+      );
+      if (missingFields.length > 0) {
+        throw new Error(`필수 필드가 누락되었습니다: ${missingFields.join(', ')}`);
+      }
+      
+      const attendees = [];
+      
+      for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        // 간단한 CSV 파싱 (큰따옴표 처리 포함)
+        const values = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let j = 0; j < line.length; j++) {
+          const char = line[j];
+          if (char === '"') {
+            inQuotes = !inQuotes;
+          } else if (char === ',' && !inQuotes) {
+            values.push(current.trim());
+            current = '';
+          } else {
+            current += char;
+          }
+        }
+        values.push(current.trim());
+        
+        const attendee = {};
+        uploadHeaders.forEach((header, index) => {
+          attendee[header] = values[index] || '';
+        });
+        
+        attendees.push(attendee);
+      }
+      
+      return attendees;
+    } catch (error) {
+      console.error('CSV 파싱 오류:', error);
+      throw error;
+    }
+  }
+
+  async generateRegistrationNumber(eventId = null) {
+    const eventIdToUse = eventId || process.env.EVENT_ID || 'default-event';
+    
+    try {
+      // 가장 큰 숫자형 등록번호 찾기
+      const stmt = this.db.prepare(`
+        SELECT registration_number FROM attendees 
+        WHERE event_id = ? AND registration_number GLOB '[0-9]*'
+        ORDER BY CAST(registration_number AS INTEGER) DESC
+        LIMIT 1
+      `);
+      
+      const result = stmt.get(eventIdToUse);
+      
+      if (result) {
+        const maxNumber = parseInt(result.registration_number);
+        return String(maxNumber + 1);
+      } else {
+        // 숫자형 등록번호가 없으면 1001부터 시작
+        return '1001';
+      }
+    } catch (error) {
+      // 오류 시 타임스탬프 방식
+      return `R${Date.now()}`;
+    }
+  }
+
+  validateRequired(attendeeData) {
+    const missing = [];
+    
+    this.requiredFields.forEach(field => {
+      if (!attendeeData[field] || attendeeData[field].trim() === '') {
+        missing.push(field);
+      }
+    });
+    
+    return missing;
+  }
+
+  async addAttendee(attendeeData, eventId = null) {
+    const eventIdToUse = eventId || process.env.EVENT_ID || 'default-event';
+    
+    try {
+      // 중복 체크 (이메일 또는 등록번호)
+      const checkStmt = this.db.prepare(`
+        SELECT * FROM attendees 
+        WHERE event_id = ? AND (email = ? OR registration_number = ?)
+      `);
+      
+      const duplicate = checkStmt.get(
+        eventIdToUse, 
+        attendeeData['이메일'], 
+        attendeeData['등록번호']
+      );
+      
+      if (duplicate) {
+        const field = duplicate.email === attendeeData['이메일'] ? '이메일' : '등록번호';
+        throw new Error(`중복된 ${field}입니다: ${duplicate.name || duplicate.email}`);
+      }
+      
+      // DB에 삽입
+      const dbData = this.mapCsvToDb(attendeeData);
+      const insertStmt = this.db.prepare(`
+        INSERT INTO attendees (
+          event_id, registration_number, name, company, contact, 
+          email, invitation_type, checked_in, checkin_time
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+      
+      const result = insertStmt.run(
+        eventIdToUse,
+        dbData.registration_number,
+        dbData.name,
+        dbData.company,
+        dbData.contact,
+        dbData.email,
+        dbData.invitation_type,
+        dbData.checked_in,
+        dbData.checkin_time
+      );
+      
+      // 삽입된 데이터 반환
+      const newAttendee = this.db.prepare(
+        'SELECT * FROM attendees WHERE id = ?'
+      ).get(result.lastInsertRowid);
+      
+      return this.mapDbToCsv(newAttendee);
+    } catch (error) {
+      console.error('참석자 추가 오류:', error);
+      throw error;
+    }
+  }
+
+  // 데이터베이스 닫기
+  close() {
+    if (this.db) {
+      this.db.close();
+    }
+  }
+
+  // 백업을 위한 메소드
+  async backup(backupPath) {
+    return new Promise((resolve, reject) => {
+      this.db.backup(backupPath)
+        .then(() => {
+          console.log(`백업 완료: ${backupPath}`);
+          resolve();
+        })
+        .catch(reject);
+    });
+  }
+}
+
+module.exports = new DBService();
