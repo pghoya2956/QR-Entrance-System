@@ -196,6 +196,7 @@ body {
     flex-direction: column;
 }
 
+
 /* 헤더 */
 .header {
     background-color: var(--bg-primary);
