@@ -137,7 +137,14 @@
                     <div class="card scanner-card">
                         <div class="card-header">
                             <h3 class="card-title">카메라 스캐너</h3>
-                            <button id="toggleCamera" class="btn btn-outline">
+                            <div class="card-actions">
+                                <button id="toggleFullscreen" class="btn btn-primary">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
+                                    </svg>
+                                    전체화면
+                                </button>
+                                <button id="toggleCamera" class="btn btn-outline">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"></path>
@@ -179,31 +186,30 @@
                                 </div>
                             </div>
                         </div>
-                        
-                        <!-- 통계 카드 -->
-                        <div class="card">
-                            <div class="card-header">
-                                <h3 class="card-title">오늘의 통계</h3>
-                            </div>
-                            <div class="scanner-stats">
-                                <div class="scanner-stat">
-                                    <div class="scanner-stat-label">총 스캔</div>
-                                    <div class="scanner-stat-value" id="totalScans">0</div>
-                                </div>
-                                <div class="scanner-stat">
-                                    <div class="scanner-stat-label">성공</div>
-                                    <div class="scanner-stat-value success" id="successScans">0</div>
-                                </div>
-                                <div class="scanner-stat">
-                                    <div class="scanner-stat-label">실패</div>
-                                    <div class="scanner-stat-value danger" id="failedScans">0</div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+    
+    <!-- 전체화면 오버레이 -->
+    <div class="fullscreen-overlays" id="fullscreenOverlays">
+        <!-- 스캔 결과 오버레이 -->
+        <div class="overlay-result" id="overlayResult"></div>
+        
+        <!-- 전체화면 플래시 효과 -->
+        <div class="fullscreen-flash" id="fullscreenFlash"></div>
+        
+        <!-- 전체화면 스캔 가이드 -->
+        <div class="fullscreen-scan-guide" id="scanGuide">
+            <div class="scan-guide-corners">
+                <div class="corner top-left"></div>
+                <div class="corner top-right"></div>
+                <div class="corner bottom-left"></div>
+                <div class="corner bottom-right"></div>
+            </div>
+            <div class="scan-guide-text">QR 코드를 프레임 안에 위치시켜주세요</div>
+        </div>
     </div>
     
     <style>
@@ -399,6 +405,340 @@
             .scanner-info {
                 grid-template-columns: 1fr;
             }
+        }
+        
+        /* ===== 전체화면 모드 스타일 ===== */
+        
+        /* 전체화면 모드 기본 설정 */
+        body.fullscreen-mode {
+            overflow: hidden;
+        }
+        
+        body.fullscreen-mode .app-layout {
+            display: block;
+        }
+        
+        body.fullscreen-mode .sidebar {
+            display: none;
+        }
+        
+        body.fullscreen-mode .main-content {
+            margin-left: 0;
+            background: #000;
+        }
+        
+        body.fullscreen-mode .header {
+            display: none;
+        }
+        
+        body.fullscreen-mode .page-content {
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        body.fullscreen-mode .scanner-layout {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+        
+        body.fullscreen-mode .scanner-card {
+            height: 100vh;
+            max-width: none;
+            border-radius: 0;
+            box-shadow: none;
+            background: #000;
+        }
+        
+        body.fullscreen-mode .card-header {
+            display: none;
+        }
+        
+        body.fullscreen-mode .scanner-container {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            padding: 0;
+            background: #000;
+            z-index: 1000 !important; /* 다른 요소들보다 위에 표시 */
+            display: block !important;
+        }
+        
+        body.fullscreen-mode #reader {
+            width: 100% !important;
+            height: 100% !important;
+            max-width: none !important;
+            position: relative;
+            z-index: 1; /* 오버레이보다 낮지만 기본 레이어보다 높게 */
+        }
+        
+        /* Html5QrCode가 생성하는 요소들도 보이도록 */
+        body.fullscreen-mode #reader > * {
+            z-index: 2;
+        }
+        
+        body.fullscreen-mode #reader video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center;
+            filter: brightness(1.1) contrast(1.1); /* 명도와 대비 향상 */
+            transform: none !important; /* 전체화면에서는 좌우반전 제거 */
+        }
+        
+        /* QR 스캔 영역은 표시하되 스타일 조정 */
+        body.fullscreen-mode #qr-shaded-region {
+            /* display: none을 제거하여 스캔 영역 표시 */
+            border-color: transparent !important;
+            background-color: rgba(0, 0, 0, 0.3) !important;
+        }
+        
+        body.fullscreen-mode .scanner-info {
+            display: none;
+        }
+        
+        body.fullscreen-mode .scanner-status {
+            display: none;
+        }
+        
+        /* 오버레이 컨테이너 */
+        .fullscreen-overlays {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 2000; /* scanner-container(1000)보다 위에 */
+            background: transparent; /* 투명 배경 명시 */
+        }
+        
+        body.fullscreen-mode .fullscreen-overlays {
+            display: block;
+        }
+        
+        /* 스캔 결과 오버레이 */
+        .overlay-result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(255, 255, 255, 0.98);
+            padding: 60px 80px;
+            border-radius: 30px;
+            font-size: 48px;
+            font-weight: 700;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+            max-width: 90%;
+            backdrop-filter: blur(20px);
+        }
+        
+        .overlay-result.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .overlay-result.success {
+            color: #10b981;
+            border: 3px solid #10b981;
+        }
+        
+        .overlay-result.error {
+            color: #ef4444;
+            border: 3px solid #ef4444;
+        }
+        
+        .overlay-result.warning {
+            color: #f59e0b;
+            border: 3px solid #f59e0b;
+        }
+        
+        .overlay-result small {
+            display: block;
+            font-size: 28px;
+            font-weight: 400;
+            margin-top: 16px;
+            opacity: 0.8;
+        }
+        
+        /* 전체화면 스캔 가이드 */
+        .fullscreen-scan-guide {
+            position: fixed;
+            width: 80vmin;
+            height: 80vmin;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 2001; /* 오버레이 컨테이너보다 약간 위 */
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        body.fullscreen-mode .fullscreen-scan-guide {
+            opacity: 1 !important;
+        }
+        
+        .scan-guide-corners {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .corner {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border: 6px solid #10b981;
+            opacity: 0.9;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        .corner.top-left {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .corner.top-right {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .corner.bottom-left {
+            bottom: 0;
+            left: 0;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .corner.bottom-right {
+            bottom: 0;
+            right: 0;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* 스캔 중 애니메이션 */
+        body.fullscreen-mode.scanning .corner {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 0.8;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+        }
+        
+        /* 스캔 가이드 텍스트 */
+        .scan-guide-text {
+            position: absolute;
+            bottom: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 20px;
+            font-weight: 500;
+            text-align: center;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+            white-space: nowrap;
+            opacity: 0.9;
+        }
+        
+        /* 전체화면 플래시 효과 */
+        .fullscreen-flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .fullscreen-flash.success {
+            background: rgba(16, 185, 129, 0.3);
+            opacity: 1;
+        }
+        
+        .fullscreen-flash.error {
+            background: rgba(239, 68, 68, 0.3);
+            opacity: 1;
+        }
+        
+        .fullscreen-flash.warning {
+            background: rgba(245, 158, 11, 0.3);
+            opacity: 1;
+        }
+        
+        /* 모바일 전체화면 최적화 */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .fullscreen-scan-guide {
+                width: 70vmin;
+                height: 70vmin;
+            }
+            
+            .corner {
+                width: 60px;
+                height: 60px;
+                border-width: 4px;
+            }
+            
+            .overlay-result {
+                font-size: 36px;
+                padding: 40px 50px;
+            }
+            
+            .overlay-result small {
+                font-size: 20px;
+            }
+        }
+        
+        /* 모바일 세로 모드 */
+        @media (max-width: 768px) and (orientation: portrait) {
+            .fullscreen-scan-guide {
+                width: 85vw;
+                height: 85vw;
+            }
+            
+            .overlay-result {
+                font-size: 32px;
+                padding: 30px 40px;
+            }
+        }
+        
+        /* 스캐너 프레임 전체화면 조정 */
+        body.fullscreen-mode .scanner-frame {
+            display: none; /* 전체화면에서는 기본 프레임 숨김 */
+        }
+        
+        /* 전체화면에서 qrbox 크게 설정 */
+        body.fullscreen-mode #reader__scan_region {
+            border: none !important;
+        }
+        
+        body.fullscreen-mode #reader__dashboard_section_swaplink {
+            display: none !important;
         }
     </style>
     
