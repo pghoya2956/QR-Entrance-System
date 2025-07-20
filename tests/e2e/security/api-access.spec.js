@@ -8,7 +8,7 @@ test.describe('API 접근 제어 테스트', () => {
   });
   
   test('API 엔드포인트 직접 접근', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'index');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'index');
     
     // 공개 API - 접근 가능해야 함
     const publicEndpoints = [
@@ -18,7 +18,7 @@ test.describe('API 접근 제어 테스트', () => {
     
     for (const endpoint of publicEndpoints) {
       const response = await page.request[endpoint.method.toLowerCase()](
-        `http://localhost:3001${endpoint.url}`,
+        `${endpoint.url}?event_id=tech-conference-2025`,
         endpoint.method === 'POST' ? {
           data: { qrData: 'REG001:김철수' },
           failOnStatusCode: false
@@ -55,7 +55,7 @@ test.describe('API 접근 제어 테스트', () => {
       }
       
       const response = await page.request[endpoint.method.toLowerCase()](
-        `http://localhost:3001${endpoint.url}`,
+        `${endpoint.url}?event_id=tech-conference-2025`,
         options
       );
       
@@ -66,13 +66,13 @@ test.describe('API 접근 제어 테스트', () => {
   
   test('잘못된 HTTP 메서드 처리', async ({ page }) => {
     // POST 엔드포인트에 GET 요청
-    const getResponse = await page.request.get('http://localhost:3001/api/checkin/verify', {
+    const getResponse = await page.request.get('/api/checkin/verify?event_id=tech-conference-2025', {
       failOnStatusCode: false
     });
     expect([404, 405]).toContain(getResponse.status());
     
     // GET 엔드포인트에 POST 요청
-    const postResponse = await page.request.post('http://localhost:3001/api/info', {
+    const postResponse = await page.request.post('/api/info?event_id=tech-conference-2025', {
       data: {},
       failOnStatusCode: false
     });
@@ -89,7 +89,7 @@ test.describe('API 접근 제어 테스트', () => {
     ];
     
     for (const endpoint of nonExistentEndpoints) {
-      const response = await page.request.get(`http://localhost:3001${endpoint}`, {
+      const response = await page.request.get(`${endpoint}?event_id=tech-conference-2025`, {
         failOnStatusCode: false
       });
       expect(response.status()).toBe(404);
@@ -102,7 +102,7 @@ test.describe('API 접근 제어 테스트', () => {
     const requests = [];
     for (let i = 0; i < 20; i++) {
       requests.push(
-        page.request.post('http://localhost:3001/api/checkin/verify', {
+        page.request.post('/api/checkin/verify?event_id=tech-conference-2025', {
           data: { qrData: `REG${i.toString().padStart(3, '0')}:테스트${i}` },
           failOnStatusCode: false
         })
@@ -124,7 +124,7 @@ test.describe('API 접근 제어 테스트', () => {
       'Referer': 'http://example.com\r\nSet-Cookie: session=hijacked'
     };
     
-    const response = await page.request.get('http://localhost:3001/api/info', {
+    const response = await page.request.get('/api/info?event_id=tech-conference-2025', {
       headers: maliciousHeaders,
       failOnStatusCode: false
     });
@@ -141,7 +141,7 @@ test.describe('API 접근 제어 테스트', () => {
   test('CSV Export 접근 제어', async ({ page }) => {
     // 정상적인 CSV 다운로드
     const response = await page.request.get(
-      'http://localhost:3001/api/admin/export-csv',
+      '/api/admin/export-csv?event_id=tech-conference-2025',
       { failOnStatusCode: false }
     );
     
@@ -156,18 +156,18 @@ test.describe('API 접근 제어 테스트', () => {
   
   test('MIME 타입 검증', async ({ page }) => {
     // API 응답의 Content-Type 확인
-    const infoResponse = await page.request.get('http://localhost:3001/api/info');
+    const infoResponse = await page.request.get('/api/info?event_id=tech-conference-2025');
     expect(infoResponse.headers()['content-type']).toContain('application/json');
     
-    const statsResponse = await page.request.get('http://localhost:3001/api/admin/stats');
+    const statsResponse = await page.request.get('/api/admin/stats?event_id=tech-conference-2025');
     expect(statsResponse.headers()['content-type']).toContain('application/json');
     
-    const csvResponse = await page.request.get('http://localhost:3001/api/admin/export-csv');
+    const csvResponse = await page.request.get('/api/admin/export-csv?event_id=tech-conference-2025');
     expect(csvResponse.headers()['content-type']).toContain('text/csv');
   });
   
   test('보안 헤더 확인', async ({ page }) => {
-    const response = await page.request.get('http://localhost:3001/api/info');
+    const response = await page.request.get('/api/info?event_id=tech-conference-2025');
     const headers = response.headers();
     
     // 기본 보안 헤더 확인
@@ -189,12 +189,12 @@ test.describe('API 접근 제어 테스트', () => {
   
   test('이벤트간 데이터 격리', async ({ page }) => {
     // 이벤트 1의 데이터 접근
-    const event1Stats = await page.request.get('http://localhost:3001/api/admin/stats');
+    const event1Stats = await page.request.get('/api/admin/stats?event_id=tech-conference-2025');
     expect(event1Stats.ok()).toBeTruthy();
     const stats1 = await event1Stats.json();
     
     // 이벤트 2의 데이터 접근
-    const event2Stats = await page.request.get('http://localhost:3002/api/admin/stats');
+    const event2Stats = await page.request.get('/api/admin/stats?event_id=startup-meetup-2025');
     expect(event2Stats.ok()).toBeTruthy();
     const stats2 = await event2Stats.json();
     

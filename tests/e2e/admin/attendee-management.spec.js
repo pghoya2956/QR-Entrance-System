@@ -27,8 +27,8 @@ test.describe('참석자 관리', () => {
     );
     console.log('Available options:', options);
     
-    // 백엔드 선택 - attendees 페이지에서는 데이터만 새로고침
-    await page.selectOption('#eventSelect', '3001');
+    // 이벤트 선택 - attendees 페이지에서는 데이터만 새로고침
+    await page.selectOption('#eventSelect', 'tech-conference-2025');
     
     // 토스트 메시지 대기
     await page.waitForSelector('.toast.show', { timeout: 5000 });
@@ -57,7 +57,7 @@ test.describe('참석자 관리', () => {
     // 직접 API 호출 테스트
     try {
       const apiResponse = await page.evaluate(async () => {
-        const response = await fetch('http://localhost:3001/api/admin/attendees');
+        const response = await fetch('/api/admin/attendees?event_id=tech-conference-2025');
         return { ok: response.ok, status: response.status };
       });
       console.log('Direct API call result:', apiResponse);
@@ -95,7 +95,7 @@ test.describe('참석자 관리', () => {
   });
   
   test('검색 기능', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     await page.waitForSelector('#attendeesTableBody');
     
     // 이름으로 검색
@@ -124,7 +124,7 @@ test.describe('참석자 관리', () => {
   });
   
   test('체크인 필터', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     await page.waitForSelector('#attendeesTableBody');
     
     // 체크인된 참석자만 표시
@@ -151,7 +151,7 @@ test.describe('참석자 관리', () => {
   });
   
   test('CSV 업로드', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     
     // 파일 입력 요소 찾기
     const fileInput = await page.locator('#csvFile');
@@ -173,7 +173,7 @@ test.describe('참석자 관리', () => {
   });
   
   test('CSV 다운로드', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     await page.waitForSelector('#attendeesTableBody');
     
     // 다운로드 버튼 클릭 (onclick 핸들러가 있는 버튼)
@@ -200,7 +200,7 @@ test.describe('참석자 관리', () => {
   });
   
   test.skip('참석자 편집 (미구현)', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     await page.waitForSelector('#attendeesTableBody');
     
     // 첫 번째 참석자의 편집 버튼 클릭
@@ -228,7 +228,7 @@ test.describe('참석자 관리', () => {
   });
   
   test('통계 API', async ({ page }) => {
-    const response = await page.request.get('http://localhost:3001/api/admin/stats');
+    const response = await page.request.get('/api/admin/stats?event_id=tech-conference-2025');
     expect(response.ok()).toBeTruthy();
     
     const data = await response.json();
@@ -244,14 +244,14 @@ test.describe('참석자 관리', () => {
   
   test('이벤트별 참석자 분리', async ({ page }) => {
     // 이벤트 1 참석자 확인
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     await page.waitForSelector('#attendeesTableBody');
     
     const event1Rows = await page.$$('tbody tr');
     const event1Count = event1Rows.length;
     
-    // 이벤트 2로 전환 - attendees 페이지에서는 데이터만 새로골침
-    await page.selectOption('#eventSelect', '3002');
+    // 이벤트 2로 전환 - attendees 페이지에서는 데이터만 새로고침
+    await page.selectOption('#eventSelect', 'startup-meetup-2025');
     await page.waitForSelector('.toast.show', { timeout: 5000 });
     await page.waitForTimeout(3000);
     

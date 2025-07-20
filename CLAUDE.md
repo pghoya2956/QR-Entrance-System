@@ -323,6 +323,45 @@ npm run migrate
 - 위치: backend/src/data/backups/
 - 형식: attendees_backup_YYYYMMDD_HHMMSS.db.gz
 
+## 최근 변경사항 (2025-01-20 추가)
+
+### QR 코드 생성 및 참가자 관리 오류 수정
+- ✅ **API 경로 중복 문제 해결**
+  - 문제: `/api/api/qr/generate/...` 형태로 경로 중복
+  - 원인: `getApiUrl()` 함수가 이미 `/api` 포함하는데 호출 시에도 추가
+  - 해결: `/api/qr/generate/` → `/qr/generate/`로 수정
+  - 파일: `/frontend/js/attendees.js`
+
+- ✅ **참가자 추가 모달 JavaScript 에러 수정**
+  - createAddAttendeeForm: eventInfo.csvFields undefined 처리
+  - closeAddAttendeeModal: null 체크 추가
+  - HTML에 누락된 DOM 엘리먼트 추가 (bulkPreviewContent, bulkAddResult, csvPreviewContent)
+
+- ✅ **UI/UX 개선**
+  - 모달 스크롤 문제 해결: max-height: 70vh 및 overflow-y: auto 추가
+  - 커스텀 스크롤바 스타일 적용
+
+- ✅ **코드베이스 정리**
+  - 백업 파일 삭제: `backend/src/migrations/migrate.js.bak`
+  - 빈 디렉토리 삭제: `tests/fixtures/test-qr-codes/`
+  - 중복 requirements 폴더 정리: `frontend/requirements/` 삭제
+
+### E2E 테스트 마이그레이션
+- ✅ **단일 백엔드 아키텍처로 전환**
+  - 포트 번호(3001-3010) → event_id 파라미터 사용
+  - Docker 헬스체크 포트 수정: 5000 → 5001
+  - 모든 API 호출에 event_id 쿼리 파라미터 추가
+
+- ✅ **테스트 데이터 생성 개선**
+  - SQLite 직접 삽입 방식 구현
+  - CSV 파싱 에러 처리 개선
+  - 빈 필드 기본값 제공
+
+- ✅ **테스트 초기화 스크립트 추가**
+  - `npm run test:init-db`: 테스트 데이터베이스 초기화
+  - events 테이블에 이벤트 정보 삽입
+  - attendees 테이블에 테스트 참가자 데이터 삽입
+
 ## 최근 변경사항 (2025-07-19 추가)
 
 ### dbService 멀티 이벤트 지원 개선
@@ -361,6 +400,19 @@ npm run migrate
   - `attendees.js`의 `bulkDownloadQR()`: `${api.baseUrl}/admin/qr/download-zip` → `getApiUrl('/admin/qr/download-zip')`
   - 불필요한 `Authorization` 헤더 제거 (JWT 인증 미사용)
 - ✅ **환경변수 정리**: `USE_DATABASE` 변수 참조 제거 (항상 SQLite 사용)
+
+### 백업 시스템 구현 (2025-07-20)
+- ✅ **백업 관리 페이지 완성**: 백업 생성, 목록 조회, 다운로드, 복원, 삭제 기능
+- ✅ **백업 API 엔드포인트**:
+  - GET `/api/admin/backups?event_id=xxx` - 백업 목록 조회
+  - POST `/api/admin/backup?event_id=xxx` - 백업 생성
+  - GET `/api/admin/backup/download/:filename` - 백업 다운로드
+  - POST `/api/admin/backup/restore/:filename?event_id=xxx` - 백업 복원
+  - DELETE `/api/admin/backup/:filename` - 백업 삭제
+- ✅ **의존성 정리**:
+  - `sqlite3`와 `better-sqlite3`를 production dependencies로 이동
+  - `"type": "module"` 제거로 CommonJS 호환성 유지
+- ✅ **백업 서비스 자동 시작**: 매일 새벽 2시 자동 백업
 
 # important-instruction-reminders
 Do what has been asked; nothing more, nothing less.

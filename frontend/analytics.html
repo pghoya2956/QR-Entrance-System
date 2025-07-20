@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>통계 분석 - QR 입장 관리 시스템</title>
     <link rel="stylesheet" href="css/style.css?v=3.1.1">
+    <!-- Chart.js 라이브러리 -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -99,474 +100,326 @@
         <!-- 메인 콘텐츠 영역 -->
         <main class="main-content">
             <!-- 헤더 -->
-            <header class="header">
-                <div class="header-content">
-                    <div class="header-left">
-                        <h1 class="header-title">통계 분석</h1>
-                    </div>
-                    
-                    <div class="header-right">
-                        <select class="event-select" id="eventSelect" onchange="handleEventChange()">
-                            <option value="">이벤트 선택</option>
-                        </select>
-                        
-                        <button class="header-btn">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
+            <header class="content-header">
+                <div class="content-header-left">
+                    <h1 class="content-title">통계 분석</h1>
+                    <p class="content-subtitle">실시간 이벤트 통계 및 분석</p>
+                </div>
+                <div class="content-header-right">
+                    <select id="eventSelect" class="form-select" onchange="handleEventChange()">
+                        <!-- 동적으로 추가됨 -->
+                    </select>
+                    <div class="header-user-info">
+                        <div class="header-user-avatar">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                             </svg>
-                            <span class="header-notification-badge"></span>
-                        </button>
-                        
-                        <div class="header-user">
-                            <div class="header-user-avatar">관</div>
-                            <div class="header-user-info">
-                                <div class="header-user-name">관리자</div>
-                                <div class="header-user-role">Administrator</div>
-                            </div>
                         </div>
+                        <span class="header-user-name">관리자</span>
                     </div>
                 </div>
             </header>
             
             <!-- 페이지 콘텐츠 -->
-            <div class="page-content">
-                <!-- 페이지 헤더 -->
-                <div class="page-header">
-                    <h2 class="page-title">이벤트 통계 분석</h2>
-                    <p class="page-subtitle">이벤트 참가 현황과 트렌드를 한눈에 확인합니다</p>
-                </div>
-                
-                <!-- 통계 요약 카드 -->
-                <div class="stats-container">
-                    <div class="stat-card primary">
-                        <div class="stat-header">
-                            <div class="stat-content">
-                                <div class="stat-label">전체 참가자</div>
-                                <div class="stat-value" id="totalParticipants">0</div>
-                                <div class="stat-change positive">
-                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>전월 대비 15%</span>
-                                </div>
-                            </div>
-                            <div class="stat-icon">👥</div>
+            <div class="content-body">
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">전체 참가자</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card success">
-                        <div class="stat-header">
-                            <div class="stat-content">
-                                <div class="stat-label">평균 참석률</div>
-                                <div class="stat-value" id="avgAttendanceRate">0%</div>
-                                <div class="stat-change positive">
-                                    <svg width="12" height="12" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fill-rule="evenodd" d="M5.293 9.707a1 1 0 010-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 01-1.414 1.414L11 7.414V15a1 1 0 11-2 0V7.414L6.707 9.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
-                                    </svg>
-                                    <span>개선 중</span>
-                                </div>
-                            </div>
-                            <div class="stat-icon">📈</div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon success">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="checkedInCount">0</div>
+                            <div class="stat-label">체크인 완료</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card warning">
-                        <div class="stat-header">
-                            <div class="stat-content">
-                                <div class="stat-label">오늘 체크인</div>
-                                <div class="stat-value" id="todayCheckins">0</div>
-                                <div class="stat-change">
-                                    <span>실시간</span>
-                                </div>
-                            </div>
-                            <div class="stat-icon">📅</div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon warning">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="notCheckedInCount">0</div>
+                            <div class="stat-label">미체크인</div>
                         </div>
                     </div>
                     
-                    <div class="stat-card info">
-                        <div class="stat-header">
-                            <div class="stat-content">
-                                <div class="stat-label">이번 주 체크인</div>
-                                <div class="stat-value" id="weekCheckins">0</div>
-                                <div class="stat-change">
-                                    <span>주간 통계</span>
-                                </div>
-                            </div>
-                            <div class="stat-icon">📊</div>
+                    <div class="stat-card">
+                        <div class="stat-card-icon info">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="attendanceRate">0%</div>
+                            <div class="stat-label">참석률</div>
                         </div>
                     </div>
                 </div>
                 
                 <!-- 차트 섹션 -->
                 <div class="charts-grid">
-                    <!-- 체크인 추이 차트 -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">체크인 추이</h3>
-                            <div class="card-actions">
-                                <select class="chart-period" id="checkinPeriod">
-                                    <option value="week">주간</option>
-                                    <option value="month">월간</option>
-                                    <option value="year">연간</option>
-                                </select>
-                            </div>
+                    <!-- 체크인 현황 도넛 차트 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">체크인 현황</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="checkinTrendChart"></canvas>
-                        </div>
-                    </div>
-                    
-                    <!-- 참가자 분포 차트 -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">참가자 유형 분포</h3>
-                        </div>
-                        <div class="chart-container">
-                            <canvas id="participantTypeChart"></canvas>
+                        <div class="chart-card-body">
+                            <canvas id="checkinChart"></canvas>
                         </div>
                     </div>
                     
                     <!-- 시간대별 체크인 차트 -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">시간대별 체크인</h3>
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">시간대별 체크인</h3>
                         </div>
-                        <div class="chart-container">
-                            <canvas id="hourlyCheckinChart"></canvas>
+                        <div class="chart-card-body">
+                            <canvas id="timelineChart"></canvas>
                         </div>
                     </div>
                     
-                    <!-- 회사별 참가자 차트 -->
-                    <div class="card">
-                        <div class="card-header">
-                            <h3 class="card-title">회사별 참가 현황</h3>
+                    <!-- 참가 유형별 통계 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">참가 유형별 통계</h3>
                         </div>
-                        <div class="chart-container">
+                        <div class="chart-card-body">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 회사별 TOP 10 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">회사별 참가자 TOP 10</h3>
+                        </div>
+                        <div class="chart-card-body">
                             <canvas id="companyChart"></canvas>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 상세 통계 테이블 -->
-                <div class="card" style="margin-top: 24px;">
-                    <div class="card-header">
-                        <h3 class="card-title">상세 통계</h3>
-                        <div class="card-actions">
-                            <button class="btn btn-outline" onclick="exportAnalytics()">
-                                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                                </svg>
-                                내보내기
-                            </button>
-                        </div>
+                <!-- 최근 체크인 목록 -->
+                <div class="recent-checkins">
+                    <div class="section-header">
+                        <h3 class="section-title">최근 체크인</h3>
+                        <button class="btn btn-outline btn-sm" onclick="refreshAnalytics()">
+                            <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            새로고침
+                        </button>
                     </div>
-                    <div class="table-container">
-                        <table class="table">
-                            <thead>
-                                <tr>
-                                    <th>항목</th>
-                                    <th>값</th>
-                                    <th>전주 대비</th>
-                                    <th>전월 대비</th>
-                                </tr>
-                            </thead>
-                            <tbody id="detailStatsBody">
-                                <!-- 상세 통계가 여기에 표시됩니다 -->
-                            </tbody>
-                        </table>
+                    <div class="recent-checkins-list" id="recentCheckinsList">
+                        <!-- 동적으로 추가됨 -->
                     </div>
                 </div>
             </div>
         </main>
     </div>
     
+    <!-- 토스트 메시지 -->
+    <div id="toast" class="toast"></div>
+    
+    <!-- CSS 추가 -->
     <style>
+        /* 통계 그리드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        /* 통계 카드 */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .stat-card-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        
+        .stat-card-icon.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: rgb(16, 185, 129);
+        }
+        
+        .stat-card-icon.warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: rgb(245, 158, 11);
+        }
+        
+        .stat-card-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: rgb(59, 130, 246);
+        }
+        
+        .stat-card-icon svg {
+            width: 28px;
+            height: 28px;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
         /* 차트 그리드 */
         .charts-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
             gap: 24px;
-            margin-top: 24px;
+            margin-bottom: 32px;
         }
         
-        /* 차트 컨테이너 */
-        .chart-container {
+        /* 차트 카드 */
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .chart-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .chart-card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .chart-card-body {
             padding: 24px;
-            position: relative;
             height: 300px;
+            position: relative;
         }
         
-        /* 차트 기간 선택 */
-        .chart-period {
-            padding: 6px 12px;
+        /* 최근 체크인 */
+        .recent-checkins {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .recent-checkins-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkin-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--background);
+            border-radius: 8px;
+            gap: 16px;
+        }
+        
+        .checkin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .checkin-info {
+            flex: 1;
+        }
+        
+        .checkin-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .checkin-company {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .checkin-time {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* 이벤트 선택 드롭다운 */
+        .form-select {
+            padding: 8px 12px;
             border: 1px solid var(--border-color);
             border-radius: 6px;
-            font-size: 14px;
             background: white;
-        }
-        
-        /* 상세 통계 테이블 */
-        .table td:nth-child(3),
-        .table td:nth-child(4) {
-            font-weight: 500;
-        }
-        
-        .positive-change {
-            color: var(--success-color);
-        }
-        
-        .negative-change {
-            color: var(--danger-color);
-        }
-        
-        /* 반응형 */
-        @media (max-width: 1024px) {
-            .charts-grid {
-                grid-template-columns: 1fr;
-            }
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
         }
     </style>
     
+    <!-- JavaScript -->
     <script src="js/common.js?v=3.1.1"></script>
-    
-    <script>
-        // 차트 인스턴스
-        let charts = {};
-        
-        // 페이지 초기화
-        window.addEventListener('DOMContentLoaded', async () => {
-            // 백엔드 초기화
-            const backendReady = await initializeEvents();
-            if (!backendReady) {
-                showToast('백엔드 연결 실패', 'error');
-                return;
-            }
-            
-            // 이벤트 목록 로드
-            loadEventOptions();
-            
-            // 통계 로드
-            loadAnalytics();
-            
-            // 차트 초기화
-            initializeCharts();
-        });
-        
-        // 통계 데이터 로드
-        async function loadAnalytics() {
-            try {
-                const stats = await api.getStats();
-                
-                // 통계 카드 업데이트
-                document.getElementById('totalParticipants').textContent = stats.total || 0;
-                const avgRate = stats.total > 0 ? Math.round((stats.checkedIn / stats.total) * 100) : 0;
-                document.getElementById('avgAttendanceRate').textContent = avgRate + '%';
-                
-                // 오늘/주간 체크인 (임시 데이터)
-                document.getElementById('todayCheckins').textContent = Math.floor(stats.checkedIn * 0.3) || 0;
-                document.getElementById('weekCheckins').textContent = stats.checkedIn || 0;
-                
-                // 상세 통계 테이블 업데이트
-                updateDetailStats(stats);
-                
-                // 차트 데이터 업데이트
-                updateChartData();
-                
-            } catch (error) {
-                console.error('통계 로드 실패:', error);
-                showToast('통계 데이터를 불러올 수 없습니다', 'error');
-            }
-        }
-        
-        // 차트 초기화
-        function initializeCharts() {
-            // 체크인 추이 차트
-            const checkinCtx = document.getElementById('checkinTrendChart').getContext('2d');
-            charts.checkinTrend = new Chart(checkinCtx, {
-                type: 'line',
-                data: {
-                    labels: ['월', '화', '수', '목', '금', '토', '일'],
-                    datasets: [{
-                        label: '체크인 수',
-                        data: [12, 19, 15, 25, 22, 30, 28],
-                        borderColor: 'rgb(99, 102, 241)',
-                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
-                        tension: 0.4
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-            
-            // 참가자 유형 분포 차트
-            const typeCtx = document.getElementById('participantTypeChart').getContext('2d');
-            charts.participantType = new Chart(typeCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['초대', '현장방문', '미정'],
-                    datasets: [{
-                        data: [65, 25, 10],
-                        backgroundColor: [
-                            'rgb(99, 102, 241)',
-                            'rgb(34, 197, 94)',
-                            'rgb(249, 115, 22)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false
-                }
-            });
-            
-            // 시간대별 체크인 차트
-            const hourlyCtx = document.getElementById('hourlyCheckinChart').getContext('2d');
-            charts.hourlyCheckin = new Chart(hourlyCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['9시', '10시', '11시', '12시', '13시', '14시', '15시', '16시', '17시'],
-                    datasets: [{
-                        label: '체크인 수',
-                        data: [5, 12, 18, 10, 8, 15, 20, 18, 12],
-                        backgroundColor: 'rgba(99, 102, 241, 0.8)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-            
-            // 회사별 참가자 차트
-            const companyCtx = document.getElementById('companyChart').getContext('2d');
-            charts.company = new Chart(companyCtx, {
-                type: 'horizontalBar',
-                data: {
-                    labels: ['A사', 'B사', 'C사', 'D사', '기타'],
-                    datasets: [{
-                        label: '참가자 수',
-                        data: [15, 12, 8, 6, 20],
-                        backgroundColor: [
-                            'rgba(99, 102, 241, 0.8)',
-                            'rgba(34, 197, 94, 0.8)',
-                            'rgba(249, 115, 22, 0.8)',
-                            'rgba(236, 72, 153, 0.8)',
-                            'rgba(107, 114, 128, 0.8)'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    }
-                }
-            });
-        }
-        
-        // 상세 통계 테이블 업데이트
-        function updateDetailStats(stats) {
-            const tbody = document.getElementById('detailStatsBody');
-            const detailData = [
-                {
-                    name: '전체 등록자',
-                    value: stats.total || 0,
-                    weekChange: '+12%',
-                    monthChange: '+25%'
-                },
-                {
-                    name: '체크인 완료',
-                    value: stats.checkedIn || 0,
-                    weekChange: '+8%',
-                    monthChange: '+18%'
-                },
-                {
-                    name: '미체크인',
-                    value: (stats.total - stats.checkedIn) || 0,
-                    weekChange: '-5%',
-                    monthChange: '-12%'
-                },
-                {
-                    name: '평균 체크인 시간',
-                    value: '10:30 AM',
-                    weekChange: '변동없음',
-                    monthChange: '15분 단축'
-                }
-            ];
-            
-            tbody.innerHTML = detailData.map(item => {
-                const weekClass = item.weekChange.includes('+') ? 'positive-change' : 
-                                 item.weekChange.includes('-') ? 'negative-change' : '';
-                const monthClass = item.monthChange.includes('+') ? 'positive-change' : 
-                                  item.monthChange.includes('-') ? 'negative-change' : '';
-                
-                return `
-                    <tr>
-                        <td>${item.name}</td>
-                        <td><strong>${item.value}</strong></td>
-                        <td class="${weekClass}">${item.weekChange}</td>
-                        <td class="${monthClass}">${item.monthChange}</td>
-                    </tr>
-                `;
-            }).join('');
-        }
-        
-        // 차트 데이터 업데이트
-        function updateChartData() {
-            // 실제 데이터로 차트 업데이트하는 로직
-            // API에서 받은 데이터를 차트에 반영
-        }
-        
-        // 통계 내보내기
-        function exportAnalytics() {
-            showToast('통계 데이터를 준비 중입니다...', 'info');
-            // CSV 또는 PDF로 통계 내보내기 구현
-        }
-        
-        // 기간 변경 이벤트
-        document.getElementById('checkinPeriod')?.addEventListener('change', (e) => {
-            const period = e.target.value;
-            updateCheckinTrendChart(period);
-        });
-        
-        // 체크인 추이 차트 업데이트
-        function updateCheckinTrendChart(period) {
-            let labels, data;
-            
-            switch(period) {
-                case 'week':
-                    labels = ['월', '화', '수', '목', '금', '토', '일'];
-                    data = [12, 19, 15, 25, 22, 30, 28];
-                    break;
-                case 'month':
-                    labels = ['1주', '2주', '3주', '4주'];
-                    data = [85, 92, 78, 95];
-                    break;
-                case 'year':
-                    labels = ['1월', '2월', '3월', '4월', '5월', '6월'];
-                    data = [320, 380, 350, 400, 420, 450];
-                    break;
-            }
-            
-            charts.checkinTrend.data.labels = labels;
-            charts.checkinTrend.data.datasets[0].data = data;
-            charts.checkinTrend.update();
-        }
-    </script>
+    <script src="js/analytics.js?v=3.1.1"></script>
 </body>
 </html>

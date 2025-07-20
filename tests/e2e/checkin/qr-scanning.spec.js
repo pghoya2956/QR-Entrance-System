@@ -14,7 +14,7 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   });
   
   test('스캐너 페이지 기본 UI', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'scanner');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
     
     // 스캐너 UI 요소 확인
     await expect(page.locator('#reader')).toBeVisible();
@@ -33,7 +33,7 @@ test.describe('QR 코드 스캔 및 체크인', () => {
     // 카메라 권한 자동 승인 설정
     await context.grantPermissions(['camera']);
     
-    await selectBackendAndLoadData(page, '3001', 'scanner');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
     
     // 스캐너가 자동으로 시작되는지 확인
     await page.waitForTimeout(2000);
@@ -58,10 +58,10 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   });
   
   test('체크인 API 직접 호출 - 정상 케이스', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'scanner');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
     
     // 정상 체크인
-    const result = await performQRCheckin(page, 'CHECKIN:REG004', '3001');
+    const result = await performQRCheckin(page, 'CHECKIN:REG004', 'tech-conference-2025');
     
     expect(result.status).toBe(200);
     expect(result.data.success).toBe(true);
@@ -72,14 +72,14 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   });
   
   test('체크인 API 직접 호출 - 중복 체크인', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'scanner');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
     
     // 첫 번째 체크인
-    const firstResult = await performQRCheckin(page, 'CHECKIN:REG002', '3001');
+    const firstResult = await performQRCheckin(page, 'CHECKIN:REG002', 'tech-conference-2025');
     
     if (firstResult.status === 200) {
       // 두 번째 체크인 시도
-      const secondResult = await performQRCheckin(page, 'CHECKIN:REG002', '3001');
+      const secondResult = await performQRCheckin(page, 'CHECKIN:REG002', 'tech-conference-2025');
       
       expect(secondResult.status).toBe(409);
       expect(secondResult.data.success).toBe(false);
@@ -91,10 +91,10 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   });
   
   test('체크인 API 직접 호출 - 미등록 참석자', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'scanner');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
     
     // 등록되지 않은 참석자 정보
-    const result = await performQRCheckin(page, 'CHECKIN:REG999', '3001');
+    const result = await performQRCheckin(page, 'CHECKIN:REG999', 'tech-conference-2025');
     
     expect(result.status).toBe(404);
     expect(result.data.success).toBe(false);
@@ -103,13 +103,13 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   
   test('이벤트별 체크인 분리', async ({ page }) => {
     // 이벤트 1에서 체크인
-    await selectBackendAndLoadData(page, '3001', 'scanner');
-    const event1Result = await performQRCheckin(page, 'CHECKIN:REG005', '3001');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
+    const event1Result = await performQRCheckin(page, 'CHECKIN:REG005', 'tech-conference-2025');
     expect([200, 409]).toContain(event1Result.status);
     
     // 이벤트 2에서 다른 참석자 체크인 (다른 이벤트이므로 성공해야 함)
-    await selectBackendAndLoadData(page, '3002', 'scanner');
-    const event2Result = await performQRCheckin(page, 'CHECKIN:STU001', '3002');
+    await selectBackendAndLoadData(page, 'startup-meetup-2025', 'scanner');
+    const event2Result = await performQRCheckin(page, 'CHECKIN:STU001', 'startup-meetup-2025');
     expect([200, 409]).toContain(event2Result.status);
     
     // 각 이벤트에 맞는 참석자인지 확인
@@ -123,7 +123,7 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   
   test('체크인 후 참석자 목록 업데이트 확인', async ({ page }) => {
     // 참석자 페이지로 이동
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     
     // 체크인된 참석자 확인
     const checkedInRows = await page.locator('tbody tr').filter({
@@ -141,7 +141,7 @@ test.describe('QR 코드 스캔 및 체크인', () => {
   });
   
   test('스캐너 페이지 결과 표시 UI', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'scanner');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'scanner');
     
     // 결과 표시 영역이 초기에는 숨겨져 있는지 확인
     const resultDisplay = page.locator(selectors.resultDisplay);
@@ -151,7 +151,7 @@ test.describe('QR 코드 스캔 및 체크인', () => {
     expect(initialDisplay).toBe('none');
     
     // 체크인 시뮬레이션 (API 호출로 상태 변경)
-    const checkinResult = await performQRCheckin(page, 'CHECKIN:REG007');
+    const checkinResult = await performQRCheckin(page, 'CHECKIN:REG007', 'tech-conference-2025');
     
     if (checkinResult.status === 200) {
       // 성공 시 결과 표시 클래스 확인

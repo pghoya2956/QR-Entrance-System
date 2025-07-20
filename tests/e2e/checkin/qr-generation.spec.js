@@ -12,7 +12,7 @@ test.describe('QR 코드 생성', () => {
   });
   
   test.skip('참석자 페이지에서 QR 코드 생성', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     
     // QR 생성 버튼 찾기 (첫 번째 참석자)
     const firstQrButton = await page.locator('.btn-generate-qr').first();
@@ -36,24 +36,22 @@ test.describe('QR 코드 생성', () => {
   
   test('QR 코드 API 직접 호출', async ({ page }) => {
     // 이벤트 1의 QR 생성 API 호출
-    const response = await page.request.post('http://localhost:3001/api/qr/generate', {
-      data: {
-        registrationId: 'REG001',
-        name: '김철수'
-      }
-    });
+    const response = await page.request.get('/api/qr/generate/REG001?event_id=tech-conference-2025');
     
     expect(response.ok()).toBeTruthy();
     
     const result = await response.json();
     expect(result).toHaveProperty('qrCode');
     expect(result.qrCode).toMatch(/^data:image\/png;base64,/);
-    expect(result).toHaveProperty('data', 'REG001:김철수');
+    expect(result).toHaveProperty('qrData', 'CHECKIN:REG001');
+    expect(result).toHaveProperty('attendeeInfo');
+    expect(result.attendeeInfo.name).toBe('김철수');
+    expect(result.attendeeInfo.registrationNumber).toBe('REG001');
   });
   
   test.skip('다른 이벤트의 QR 코드 생성', async ({ page }) => {
     // 이벤트 2의 QR 생성 API 호출
-    const response = await page.request.post('http://localhost:3002/api/qr/generate', {
+    const response = await page.request.post('/api/qr/generate?event_id=startup-meetup-2025', {
       data: {
         registrationId: 'STU001',
         name: '강민지'
@@ -68,33 +66,27 @@ test.describe('QR 코드 생성', () => {
   });
   
   test('필수 필드 누락 시 에러', async ({ page }) => {
-    // 등록번호 누락
-    const response1 = await page.request.post('http://localhost:3001/api/qr/generate', {
-      data: {
-        name: '테스트'
-      },
+    // 존재하지 않는 등록번호
+    const response1 = await page.request.get('/api/qr/generate/INVALID999?event_id=tech-conference-2025', {
       failOnStatusCode: false
     });
     
-    expect(response1.status()).toBe(400);
+    expect(response1.status()).toBe(404);
     const error1 = await response1.json();
-    expect(error1.error).toContain('등록번호');
+    expect(error1.error).toContain('참석자를 찾을 수 없습니다');
     
-    // 이름 누락
-    const response2 = await page.request.post('http://localhost:3001/api/qr/generate', {
-      data: {
-        registrationId: 'TEST001'
-      },
+    // event_id 누락
+    const response2 = await page.request.get('/api/qr/generate/REG001', {
       failOnStatusCode: false
     });
     
     expect(response2.status()).toBe(400);
     const error2 = await response2.json();
-    expect(error2.error).toContain('이름');
+    expect(error2.error).toContain('event_id가 필요합니다');
   });
   
   test.skip('QR 코드 다운로드 기능', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     
     // QR 생성 및 모달 열기
     await page.locator('.btn-generate-qr').first().click();
@@ -114,7 +106,7 @@ test.describe('QR 코드 생성', () => {
   });
   
   test('모달 닫기 기능', async ({ page }) => {
-    await selectBackendAndLoadData(page, '3001', 'attendees');
+    await selectBackendAndLoadData(page, 'tech-conference-2025', 'attendees');
     
     // QR 생성 및 모달 열기
     await page.locator('.btn-generate-qr').first().click();

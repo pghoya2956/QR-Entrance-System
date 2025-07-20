@@ -127,54 +127,27 @@ export async function selectBackendAndLoadData(page, eventId, pageType = 'index'
   }
 }
 
-/**
- * 백엔드 상태 확인
- * @param {import('@playwright/test').Page} page
- * @returns {Promise<BackendInfo|null>}
- */
-export async function getCurrentBackend(page) {
-  return await page.evaluate(() => {
-    const port = localStorage.getItem('selectedBackend');
-    if (!port) return null;
-    return {
-      port: port,
-      baseUrl: `http://localhost:${port}`
-    };
-  });
-}
 
 /**
  * 통계 데이터 가져오기
  * @param {import('@playwright/test').Page} page
- * @param {string} [port] - 포트 번호 (선택사항, 기본값: 3001)
+ * @param {string} [eventId] - 이벤트 ID (선택사항, 기본값: 'tech-conference-2025')
  * @returns {Promise<StatsResponse>}
  */
-export async function getStats(page, port = '3001') {
-  const apiUrl = `http://localhost:${port}`;
-  const response = await page.request.get(`${apiUrl}/api/admin/stats`);
+export async function getStats(page, eventId = 'tech-conference-2025') {
+  const response = await page.request.get(`/api/admin/stats?event_id=${eventId}`);
   return await response.json();
 }
 
-/**
- * API URL 가져오기
- * @param {import('@playwright/test').Page} page
- * @returns {Promise<string>}
- */
-export async function getApiUrl(page) {
-  const backend = await getCurrentBackend(page);
-  if (!backend) {
-    throw new Error('No backend selected');
-  }
-  return backend.baseUrl;
-}
 
 /**
  * 참석자 목록 가져오기
  * @param {import('@playwright/test').Page} page
+ * @param {string} [eventId] - 이벤트 ID (선택사항, 기본값: 'tech-conference-2025')
  * @returns {Promise<AttendeeData[]>}
  */
-export async function getAttendees(page) {
-  const response = await page.request.get(`${await getApiUrl(page)}/api/admin/attendees`);
+export async function getAttendees(page, eventId = 'tech-conference-2025') {
+  const response = await page.request.get(`/api/admin/attendees?event_id=${eventId}`);
   return await response.json();
 }
 
@@ -182,13 +155,12 @@ export async function getAttendees(page) {
  * 체크인 상태 토글
  * @param {import('@playwright/test').Page} page
  * @param {string} registrationNumber
- * @param {string} [port] - 포트 번호 (선택사항, 기본값: 3001)
+ * @param {string} [eventId] - 이벤트 ID (선택사항, 기본값: 'tech-conference-2025')
  * @returns {Promise<Object>}
  */
-export async function toggleCheckin(page, registrationNumber, port = '3001') {
-  const apiUrl = `http://localhost:${port}`;
+export async function toggleCheckin(page, registrationNumber, eventId = 'tech-conference-2025') {
   const response = await page.request.put(
-    `${apiUrl}/api/admin/attendee/${registrationNumber}/toggle-checkin`
+    `/api/admin/attendee/${registrationNumber}/toggle-checkin?event_id=${eventId}`
   );
   return await response.json();
 }
@@ -242,13 +214,12 @@ export async function expectToast(page, expectedMessage) {
  * QR 체크인 수행
  * @param {import('@playwright/test').Page} page
  * @param {string} qrData
- * @param {string} [port] - 포트 번호 (선택사항, 기본값: 3001)
+ * @param {string} [eventId] - 이벤트 ID (선택사항, 기본값: 'tech-conference-2025')
  * @returns {Promise<Object>}
  */
-export async function performQRCheckin(page, qrData, port = '3001') {
-  const apiUrl = `http://localhost:${port}`;
+export async function performQRCheckin(page, qrData, eventId = 'tech-conference-2025') {
   const response = await page.request.post(
-    `${apiUrl}/api/checkin/verify`,
+    `/api/checkin/verify?event_id=${eventId}`,
     {
       data: { qrData },
       failOnStatusCode: false
@@ -313,12 +284,12 @@ export async function initializePage(page) {
 /**
  * 백엔드 헬스 체크
  * @param {import('@playwright/test').Page} page
- * @param {string} port
+ * @param {string} eventId
  * @returns {Promise<boolean>}
  */
-export async function checkBackendHealth(page, port) {
+export async function checkBackendHealth(page, eventId) {
   try {
-    const response = await page.request.get(`http://localhost:${port}/api/info`);
+    const response = await page.request.get(`/api/info?event_id=${eventId}`);
     return response.ok();
   } catch (error) {
     return false;

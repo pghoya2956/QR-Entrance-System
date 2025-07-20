@@ -62,13 +62,21 @@ async function startServer() {
         });
 
         // events 테이블에서 이벤트 정보 조회
-        const eventInfos = await dataService.allAsync('SELECT id, name FROM events');
+        const eventInfos = await dataService.allAsync('SELECT id, name, description, created_at FROM events');
         const eventMap = {};
-        eventInfos.forEach(e => { eventMap[e.id] = e.name; });
+        eventInfos.forEach(e => { 
+          eventMap[e.id] = {
+            name: e.name,
+            description: e.description,
+            created_at: e.created_at
+          };
+        });
         
         const eventList = events.map(event => ({
           eventId: event.event_id,
-          eventName: eventMap[event.event_id] || event.event_id,
+          eventName: eventMap[event.event_id]?.name || event.event_id,
+          description: eventMap[event.event_id]?.description || '',
+          created_at: eventMap[event.event_id]?.created_at || new Date().toISOString(),
           attendeeCount: event.attendeeCount
         }));
 

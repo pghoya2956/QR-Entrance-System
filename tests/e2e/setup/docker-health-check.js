@@ -53,18 +53,18 @@ export async function waitForServices(services = [
 }
 
 /**
- * 특정 백엔드 서비스가 준비될 때까지 대기
+ * 특정 이벤트의 백엔드가 준비될 때까지 대기
  */
-export async function waitForBackend(port) {
+export async function waitForBackend(eventId) {
   const maxRetries = 10;
   const retryDelay = 1000;
   
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const response = await fetch(`http://localhost:${port}/api/info`);
+      const response = await fetch(`http://localhost:5000/api/info?event_id=${eventId}`);
       if (response.ok) {
         const info = await response.json();
-        console.log(`✅ 백엔드 준비됨 (포트 ${port}): ${info.eventName}`);
+        console.log(`✅ 백엔드 준비됨 (이벤트 ${eventId}): ${info.eventName}`);
         return info;
       }
     } catch (error) {

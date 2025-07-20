@@ -386,19 +386,23 @@ router.post('/attendees/bulk-checkin', async (req, res) => {
   }
 });
 
-// 백업 관련 API (DB 모드일 때만)
+// 백업 관련 API
 router.get('/backups', async (req, res) => {
   try {
-    if (!process.env.USE_DATABASE || process.env.USE_DATABASE === 'false') {
-      return res.status(400).json({ error: '백업은 데이터베이스 모드에서만 사용 가능합니다.' });
+    if (!global.backupService) {
+      return res.status(503).json({ error: '백업 서비스가 초기화되지 않았습니다.' });
     }
     
     const backups = await global.backupService.listBackups();
     
-    res.json({
-      backups,
-      status: global.backupService.getStatus()
-    });
+    // event_id로 필터링 (현재는 모든 백업 반환)
+    const eventBackups = backups.map(backup => ({
+      filename: backup.name,
+      size: backup.size,
+      createdAt: backup.createdAt
+    }));
+    
+    res.json(eventBackups);
   } catch (error) {
     console.error('백업 목록 조회 오류:', error);
     res.status(500).json({ error: '백업 목록 조회 실패' });
@@ -407,8 +411,8 @@ router.get('/backups', async (req, res) => {
 
 router.post('/backup', async (req, res) => {
   try {
-    if (!process.env.USE_DATABASE || process.env.USE_DATABASE === 'false') {
-      return res.status(400).json({ error: '백업은 데이터베이스 모드에서만 사용 가능합니다.' });
+    if (!global.backupService) {
+      return res.status(503).json({ error: '백업 서비스가 초기화되지 않았습니다.' });
     }
     
     const result = await global.backupService.createBackup();
@@ -421,6 +425,91 @@ router.post('/backup', async (req, res) => {
   } catch (error) {
     console.error('백업 생성 오류:', error);
     res.status(500).json({ error: '백업 생성 실패' });
+  }
+});
+
+// 백업 다운로드 API
+router.get('/backup/download/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const path = require('path');
+    const fs = require('fs');
+    
+    const backupDir = path.join(__dirname, '../data/backups');
+    const filePath = path.join(backupDir, filename);
+    
+    // 보안: 경로 순회 공격 방지
+    if (!filename.match(/^attendees_backup_[\d_]+\.db\.gz$/)) {
+      return res.status(400).json({ error: '잘못된 파일명입니다.' });
+    }
+    
+    // 파일 존재 확인
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: '백업 파일을 찾을 수 없습니다.' });
+    }
+    
+    res.download(filePath, filename);
+  } catch (error) {
+    console.error('백업 다운로드 오류:', error);
+    res.status(500).json({ error: '백업 다운로드 실패' });
+  }
+});
+
+// 백업 복원 API
+router.post('/backup/restore/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    
+    if (!global.backupService) {
+      return res.status(503).json({ error: '백업 서비스가 초기화되지 않았습니다.' });
+    }
+    
+    // 보안: 경로 순회 공격 방지
+    if (!filename.match(/^attendees_backup_[\d_]+\.db\.gz$/)) {
+      return res.status(400).json({ error: '잘못된 파일명입니다.' });
+    }
+    
+    await global.backupService.restoreBackup(filename);
+    
+    res.json({
+      success: true,
+      message: '백업이 성공적으로 복원되었습니다.'
+    });
+  } catch (error) {
+    console.error('백업 복원 오류:', error);
+    res.status(500).json({ error: '백업 복원 실패' });
+  }
+});
+
+// 백업 삭제 API
+router.delete('/backup/:filename', async (req, res) => {
+  try {
+    const { filename } = req.params;
+    const path = require('path');
+    const fs = require('fs').promises;
+    
+    // 보안: 경로 순회 공격 방지
+    if (!filename.match(/^attendees_backup_[\d_]+\.db\.gz$/)) {
+      return res.status(400).json({ error: '잘못된 파일명입니다.' });
+    }
+    
+    const backupDir = path.join(__dirname, '../data/backups');
+    const filePath = path.join(backupDir, filename);
+    
+    // 파일 삭제
+    await fs.unlink(filePath);
+    
+    res.json({
+      success: true,
+      message: '백업이 삭제되었습니다.'
+    });
+  } catch (error) {
+    console.error('백업 삭제 오류:', error);
+    if (error.code === 'ENOENT') {
+      res.status(404).json({ error: '백업 파일을 찾을 수 없습니다.' });
+    } else {
+      res.status(500).json({ error: '백업 삭제 실패' });
+    }
   }
 });
 
