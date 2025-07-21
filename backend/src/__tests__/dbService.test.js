@@ -18,8 +18,7 @@ describe('DbService', () => {
     
     // 환경 변수 설정
     process.env.EVENT_ID = testEventId;
-    process.env.CSV_FIELDS = '등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간';
-    process.env.CSV_REQUIRED = '등록번호,고객명,회사명,이메일';
+    // 레거시 환경변수 제거됨 - SQLite 전용
     
     // DbService 인스턴스 생성
     dbService = new DbService(testDbPath);

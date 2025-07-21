@@ -155,7 +155,6 @@
                         </div>
                         <div class="scanner-container">
                             <div id="reader"></div>
-                            <div class="scanner-frame" id="scannerFrame"></div>
                             <div id="status" class="scanner-status">카메라 준비 중...</div>
                         </div>
                     </div>
@@ -250,22 +249,13 @@
         
         #reader video {
             width: 100% !important;
-            height: auto !important;
+            height: 100% !important;
+            object-fit: contain !important;  /* 비디오 전체가 보이도록 설정 */
+            object-position: center;
             border-radius: 12px;
         }
         
-        .scanner-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 300px;
-            height: 300px;
-            border: 3px solid var(--primary-color);
-            border-radius: 12px;
-            pointer-events: none;
-            z-index: 10;
-        }
+        /* 초록색 scanner-frame 제거됨 */
         
         .scanner-status {
             margin-top: 20px;
@@ -485,7 +475,7 @@
         body.fullscreen-mode #reader video {
             width: 100% !important;
             height: 100% !important;
-            object-fit: cover !important;
+            object-fit: contain !important;  /* cover에서 contain으로 변경하여 전체 화면이 보이도록 */
             object-position: center;
             filter: brightness(1.1) contrast(1.1); /* 명도와 대비 향상 */
             transform: none !important; /* 전체화면에서는 좌우반전 제거 */
@@ -549,7 +539,7 @@
         }
         
         .overlay-result.success {
-            color: #10b981;
+            color: #ffffff;  /* 텍스트도 흰색 */
             border: 3px solid #10b981;
         }
         
@@ -574,8 +564,8 @@
         /* 전체화면 스캔 가이드 */
         .fullscreen-scan-guide {
             position: fixed;
-            width: 80vmin;
-            height: 80vmin;
+            width: min(90vw, 90vh, 800px);  /* 화면의 90% 또는 최대 800px */
+            height: min(90vw, 90vh, 800px);
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
@@ -597,12 +587,12 @@
         
         .corner {
             position: absolute;
-            width: 100px;
+            width: 100px;  /* 더 큰 프레임에 맞춰 코너도 크게 */
             height: 100px;
-            border: 6px solid #10b981;
+            border: 3px solid #ffffff;  /* 흰색으로 변경 */
             opacity: 0.9;
             border-radius: 8px;
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.4);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);  /* 흰색 그림자 */
         }
         
         .corner.top-left {
@@ -694,8 +684,8 @@
         /* 모바일 전체화면 최적화 */
         @media (max-width: 768px) and (orientation: landscape) {
             .fullscreen-scan-guide {
-                width: 70vmin;
-                height: 70vmin;
+                width: min(85vw, 85vh);  /* 모바일에서도 화면의 85% */
+                height: min(85vw, 85vh);
             }
             
             .corner {
@@ -717,8 +707,8 @@
         /* 모바일 세로 모드 */
         @media (max-width: 768px) and (orientation: portrait) {
             .fullscreen-scan-guide {
-                width: 85vw;
-                height: 85vw;
+                width: min(85vw, 85vh);  /* 모바일에서도 화면의 85% */
+                height: min(85vw, 85vh);
             }
             
             .overlay-result {
@@ -728,12 +718,54 @@
         }
         
         /* 스캐너 프레임 전체화면 조정 */
-        body.fullscreen-mode .scanner-frame {
-            display: none; /* 전체화면에서는 기본 프레임 숨김 */
+        /* scanner-frame 제거됨 */
+        
+        /* Html5Qrcode 스캔 박스 테두리 숨기기 */
+        #reader__scan_region {
+            border: none !important;
         }
         
-        /* 전체화면에서 qrbox 크게 설정 */
         body.fullscreen-mode #reader__scan_region {
+            border: none !important;
+        }
+        
+        /* Html5Qrcode가 생성하는 모든 요소의 테두리 제거 */
+        #reader > div {
+            border: none !important;
+        }
+        
+        #reader .qr-sharpnel-zone {
+            border: none !important;
+        }
+        
+        #reader .qr-sharpnel-zone__overlay {
+            border: none !important;
+        }
+        
+        #reader .qr-sharpnel-zone__scan-region {
+            border: none !important;
+        }
+        
+        /* 스캔 영역 표시 박스도 숨기기 */
+        #reader [style*="border: 3px"],
+        #reader [style*="border:3px"],
+        #reader [style*="border-width: 3px"],
+        #reader [style*="border-width:3px"],
+        #reader [style*="border: 2px"],
+        #reader [style*="border:2px"],
+        #reader [style*="border-style"],
+        #reader [style*="border-color"] {
+            border: none !important;
+            box-shadow: none !important;
+        }
+        
+        /* 모든 자식 요소에서 초록색(primary-color) 테두리 제거 */
+        #reader * {
+            border-color: transparent !important;
+        }
+        
+        /* Html5Qrcode의 모든 인라인 스타일 덮어쓰기 */
+        #reader div[style] {
             border: none !important;
         }
         
@@ -843,6 +875,28 @@
                 </div>
             `).join('');
         }
+        
+        // 디버깅용 테스트 함수
+        window.testQRScan = function(qrData = 'REG001') {
+            console.log('[테스트] QR 스캔 시뮬레이션:', qrData);
+            if (typeof onScanSuccess === 'function') {
+                onScanSuccess(qrData, {});
+            } else {
+                console.error('onScanSuccess 함수를 찾을 수 없습니다');
+            }
+        };
+        
+        // 디버깅 정보 출력
+        window.debugScanner = function() {
+            console.log('[스캐너 디버그 정보]', {
+                currentEventId: window.currentEventId,
+                isScanning: window.getIsScanning ? window.getIsScanning() : 'undefined',
+                isFullscreen: window.getIsFullscreen ? window.getIsFullscreen() : 'undefined',
+                html5QrCode: window.getHtml5QrCode ? !!window.getHtml5QrCode() : 'undefined',
+                onScanSuccess: typeof window.onScanSuccess,
+                processCheckin: typeof window.processCheckin
+            });
+        };
     </script>
 </body>
 </html>

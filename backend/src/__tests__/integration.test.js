@@ -11,11 +11,10 @@ describe('통합 테스트', () => {
   
   beforeAll(async () => {
     // 환경 변수 설정
-    process.env.USE_DATABASE = 'true';
+    // SQLite DB 전용으로 변경됨
     process.env.EVENT_ID = 'test-event-integration';
     process.env.EVENT_NAME = '통합 테스트 이벤트';
-    process.env.CSV_FIELDS = '등록번호,고객명,회사명,연락처,이메일,초대/현장방문,체크인,체크인시간';
-    process.env.CSV_REQUIRED = '등록번호,고객명,회사명,이메일';
+    // 레거시 환경변수 제거됨
     process.env.JWT_SECRET = 'test-secret';
     process.env.PORT = '0'; // 랜덤 포트
     
@@ -200,7 +199,7 @@ CSV001,CSV 업로드 테스트,CSV 회사,010-9999-9999,csv@upload.com,초대,fa
   });
   
   describe('데이터베이스 모드', () => {
-    test('USE_DATABASE=true 일 때 DB 사용', () => {
+    test('SQLite DB 사용 확인', () => {
       expect(global.dataService.constructor.name).toBe('DbService');
       expect(global.dataService.db).toBeDefined();
     });

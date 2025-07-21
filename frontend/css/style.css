@@ -1204,34 +1204,7 @@ input[type="checkbox"] {
     box-shadow: var(--shadow);
 }
 
-.scanner-frame {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 300px;
-    height: 300px;
-    border: 3px solid var(--primary-color);
-    border-radius: var(--border-radius);
-    box-shadow: 0 0 0 2000px rgba(0, 0, 0, 0.3);
-    transition: var(--transition);
-    display: none;
-}
-
-.scanner-frame.detecting {
-    border-color: var(--warning-color);
-    box-shadow: 0 0 20px rgba(251, 99, 64, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
-}
-
-.scanner-frame.success {
-    border-color: var(--success-color);
-    box-shadow: 0 0 20px rgba(45, 206, 137, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
-}
-
-.scanner-frame.error {
-    border-color: var(--danger-color);
-    box-shadow: 0 0 20px rgba(245, 54, 92, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
-}
+/* scanner-frame 관련 스타일 제거됨 - 전체화면 흰색 가이드만 사용 */
 
 /* ===== 폼 스타일 ===== */
 .form-group {

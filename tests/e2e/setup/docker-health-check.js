@@ -61,7 +61,7 @@ export async function waitForBackend(eventId) {
   
   for (let i = 0; i < maxRetries; i++) {
     try {
-      const response = await fetch(`http://localhost:5000/api/info?event_id=${eventId}`);
+      const response = await fetch(`http://localhost:5001/api/info?event_id=${eventId}`);
       if (response.ok) {
         const info = await response.json();
         console.log(`✅ 백엔드 준비됨 (이벤트 ${eventId}): ${info.eventName}`);

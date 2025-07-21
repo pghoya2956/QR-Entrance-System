@@ -223,7 +223,6 @@
                         
                         <div class="scanner-wrapper">
                             <div id="reader"></div>
-                            <div class="scanner-frame" id="scannerFrame"></div>
                         </div>
                         <div id="status" class="scanner-status">카메라 준비 중...</div>
                         <div id="resultDisplay" class="result-display"></div>
@@ -349,34 +348,7 @@
             margin-bottom: 1rem;
         }
         
-        .scanner-frame {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 250px;
-            height: 250px;
-            border: 3px solid var(--primary-color);
-            border-radius: var(--border-radius);
-            pointer-events: none;
-            z-index: 10;
-            transition: var(--transition);
-        }
-        
-        .scanner-frame.detecting {
-            border-color: var(--warning-color);
-            box-shadow: 0 0 20px rgba(245, 158, 11, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
-        }
-        
-        .scanner-frame.success {
-            border-color: var(--success-color);
-            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
-        }
-        
-        .scanner-frame.error {
-            border-color: var(--danger-color);
-            box-shadow: 0 0 20px rgba(239, 68, 68, 0.5), 0 0 0 2000px rgba(0, 0, 0, 0.3);
-        }
+        /* scanner-frame 관련 스타일 제거됨 */
         
         /* 최근 체크인 */
         .recent-checkins {
@@ -605,15 +577,9 @@
             return `${hours}:${minutes}:${seconds}`;
         }
         
-        // 스캐너 프레임 색상 변경
+        // 스캐너 프레임 색상 변경 - 더 이상 사용하지 않음
         function setFrameState(state) {
-            const frame = document.getElementById('scannerFrame');
-            if (!frame) return;
-            
-            frame.className = 'scanner-frame';
-            if (state) {
-                frame.classList.add(state);
-            }
+            // scanner-frame 제거로 더 이상 필요 없음
         }
         
         // 결과 표시
