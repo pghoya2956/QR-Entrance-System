@@ -154,7 +154,17 @@
                             </div>
                         </div>
                         <div class="scanner-container">
-                            <div id="reader"></div>
+                            <div class="reader-wrapper">
+                                <div id="reader"></div>
+                                <div class="scanner-frame-overlay">
+                                    <div class="scanner-frame-corners">
+                                        <div class="frame-corner top-left"></div>
+                                        <div class="frame-corner top-right"></div>
+                                        <div class="frame-corner bottom-left"></div>
+                                        <div class="frame-corner bottom-right"></div>
+                                    </div>
+                                </div>
+                            </div>
                             <div id="status" class="scanner-status">카메라 준비 중...</div>
                         </div>
                     </div>
@@ -229,11 +239,22 @@
             flex-direction: column;
             align-items: center;
             position: relative;
+            width: 100%;
+        }
+        
+        /* Reader 래퍼 */
+        .reader-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         
         #reader {
             width: 100%;
-            max-width: 500px;
             min-height: 400px;
             position: relative;
             background: #000;
@@ -255,7 +276,66 @@
             border-radius: 12px;
         }
         
-        /* 초록색 scanner-frame 제거됨 */
+        /* 일반 모드 스캐너 프레임 오버레이 */
+        .scanner-frame-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            pointer-events: none;
+            z-index: 100;
+        }
+        
+        .scanner-frame-corners {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+        
+        .frame-corner {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border: 4px solid #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.8), 
+                        inset 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+        
+        .frame-corner.top-left {
+            top: 0;
+            left: 0;
+            border-right: none;
+            border-bottom: none;
+        }
+        
+        .frame-corner.top-right {
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+        }
+        
+        .frame-corner.bottom-left {
+            bottom: 0;
+            left: 0;
+            border-right: none;
+            border-top: none;
+        }
+        
+        .frame-corner.bottom-right {
+            bottom: 0;
+            right: 0;
+            border-left: none;
+            border-top: none;
+        }
+        
+        /* 전체화면에서는 일반 프레임 숨기기 */
+        body.fullscreen-mode .scanner-frame-overlay {
+            display: none;
+        }
         
         .scanner-status {
             margin-top: 20px;
@@ -571,12 +651,11 @@
             transform: translate(-50%, -50%);
             pointer-events: none;
             z-index: 2001; /* 오버레이 컨테이너보다 약간 위 */
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            display: none;
         }
         
         body.fullscreen-mode .fullscreen-scan-guide {
-            opacity: 1 !important;
+            display: block !important;
         }
         
         .scan-guide-corners {
@@ -626,6 +705,11 @@
         /* 스캔 중 애니메이션 */
         body.fullscreen-mode.scanning .corner {
             animation: pulse 2s infinite;
+        }
+        
+        /* 전체화면이 아닐 때도 스캔 가이드 표시 */
+        body:not(.fullscreen-mode) .fullscreen-scan-guide {
+            display: none !important;
         }
         
         @keyframes pulse {

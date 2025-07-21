@@ -399,6 +399,11 @@ async function startScanning() {
                     zIndex: getComputedStyle(video).zIndex
                 });
             }
+            
+            // 일반 모드에서 프레임 위치 조정
+            if (!isFullscreen) {
+                adjustFramePosition();
+            }
         } else {
             console.error('비디오 요소를 찾을 수 없음!');
         }
@@ -895,7 +900,32 @@ function attachVideoListeners() {
         video.addEventListener('loadedmetadata', () => {
             if (isFullscreen) {
                 adjustScanGuide();
+            } else {
+                adjustFramePosition();
             }
         });
+    }
+}
+
+// 일반 모드에서 프레임 위치 조정
+function adjustFramePosition() {
+    const reader = document.getElementById('reader');
+    const video = document.querySelector('#reader video');
+    const frameOverlay = document.querySelector('.scanner-frame-overlay');
+    
+    if (!reader || !video || !frameOverlay) return;
+    
+    // 비디오의 실제 표시 크기 계산
+    const videoRect = video.getBoundingClientRect();
+    const readerRect = reader.getBoundingClientRect();
+    
+    // 비디오가 reader 내에서 실제로 표시되는 영역 계산
+    const videoDisplayHeight = videoRect.height;
+    const readerHeight = readerRect.height;
+    
+    // 프레임을 비디오의 실제 중앙에 배치
+    if (videoDisplayHeight > 0) {
+        const offsetTop = (readerHeight - videoDisplayHeight) / 2;
+        frameOverlay.style.top = `calc(50% + ${offsetTop}px)`;
     }
 }
