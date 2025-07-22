@@ -25,14 +25,47 @@ class ScannerCore {
     async initialize() {
         console.log('[ScannerCore] 초기화 시작');
         
+        // 디버그 정보 출력
+        this.logDebugInfo();
+        
         // 이벤트 리스너 설정
         this.setupEventListeners();
         
-        // 카메라 권한 요청
-        await this.requestCameraPermission();
+        try {
+            // 카메라 권한 요청
+            await this.requestCameraPermission();
+            
+            // 스캐너 시작
+            await this.startScanner();
+        } catch (err) {
+            console.error('[ScannerCore] 초기화 실패:', err);
+            // 에러가 발생해도 UI는 표시되도록 함
+        }
+    }
+    
+    // 디버그 정보 로깅
+    logDebugInfo() {
+        const info = {
+            protocol: window.location.protocol,
+            hostname: window.location.hostname,
+            userAgent: navigator.userAgent,
+            isSecureContext: window.isSecureContext,
+            hasMediaDevices: !!navigator.mediaDevices,
+            hasGetUserMedia: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)
+        };
         
-        // 스캐너 시작
-        await this.startScanner();
+        console.log('[ScannerCore] 환경 정보:', info);
+        
+        // 모바일인지 확인
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        if (isMobile) {
+            console.log('[ScannerCore] 모바일 환경 감지');
+            
+            // HTTPS 경고
+            if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                this.updateStatus('⚠️ 모바일에서는 HTTPS 연결이 필요합니다');
+            }
+        }
     }
     
     // 이벤트 리스너 설정
@@ -66,12 +99,40 @@ class ScannerCore {
     // 카메라 권한 요청
     async requestCameraPermission() {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            // HTTPS 체크
+            if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+                console.warn('[ScannerCore] HTTPS가 아닙니다. 모바일에서는 HTTPS가 필요합니다.');
+                this.updateStatus('보안 연결(HTTPS)이 필요합니다');
+            }
+            
+            // 미디어 디바이스 API 지원 확인
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('이 브라우저는 카메라를 지원하지 않습니다');
+            }
+            
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    facingMode: "environment" 
+                } 
+            });
             stream.getTracks().forEach(track => track.stop());
             console.log('[ScannerCore] 카메라 권한 획득 성공');
         } catch (err) {
             console.error('[ScannerCore] 카메라 권한 오류:', err);
-            this.updateStatus('카메라 권한이 필요합니다');
+            
+            // 상세한 에러 메시지
+            if (err.name === 'NotAllowedError') {
+                this.updateStatus('카메라 권한이 거부되었습니다. 브라우저 설정에서 권한을 허용해주세요.');
+            } else if (err.name === 'NotFoundError') {
+                this.updateStatus('카메라를 찾을 수 없습니다');
+            } else if (err.name === 'NotReadableError') {
+                this.updateStatus('카메라가 이미 사용 중입니다');
+            } else if (err.name === 'SecurityError') {
+                this.updateStatus('보안 오류: HTTPS 연결이 필요합니다');
+            } else {
+                this.updateStatus(`카메라 오류: ${err.message}`);
+            }
+            
             throw err;
         }
     }
@@ -138,8 +199,24 @@ class ScannerCore {
             }
         } catch (err) {
             console.error('[ScannerCore] 스캐너 시작 오류:', err);
-            this.updateStatus(`오류: ${err.message || err}`);
+            
+            // Html5Qrcode 특정 에러 처리
+            if (err.toString().includes('NotAllowedError')) {
+                this.updateStatus('카메라 권한을 허용해주세요');
+                // 권한 요청 버튼 표시
+                this.showPermissionButton();
+            } else if (err.toString().includes('NotFoundError')) {
+                this.updateStatus('카메라를 찾을 수 없습니다');
+            } else if (err.toString().includes('NotReadableError')) {
+                this.updateStatus('카메라가 다른 앱에서 사용 중입니다');
+            } else if (err.toString().includes('OverconstrainedError')) {
+                this.updateStatus('카메라 설정 오류. 다시 시도해주세요.');
+            } else {
+                this.updateStatus(`오류: ${err.message || err}`);
+            }
+            
             this.isScanning = false;
+            this.updateCameraButton(false);
         }
     }
     
@@ -444,6 +521,47 @@ class ScannerCore {
                 guide.style.display = 'none';
             }, 5000);
         }
+    }
+    
+    // 권한 요청 버튼 표시
+    showPermissionButton() {
+        const reader = document.getElementById('reader');
+        if (!reader) return;
+        
+        // 기존 버튼이 있으면 제거
+        const existingBtn = document.getElementById('cameraPermissionBtn');
+        if (existingBtn) existingBtn.remove();
+        
+        // 권한 요청 버튼 생성
+        const btn = document.createElement('button');
+        btn.id = 'cameraPermissionBtn';
+        btn.className = 'btn btn-primary';
+        btn.innerHTML = '📷 카메라 권한 허용하기';
+        btn.style.cssText = `
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            padding: 16px 32px;
+            font-size: 18px;
+        `;
+        
+        btn.onclick = async () => {
+            btn.disabled = true;
+            btn.innerHTML = '권한 요청 중...';
+            
+            try {
+                await this.requestCameraPermission();
+                btn.remove();
+                await this.startScanner();
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '📷 다시 시도';
+            }
+        };
+        
+        reader.appendChild(btn);
     }
 }
 

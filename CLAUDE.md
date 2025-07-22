@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-QR 코드 기반 행사 입장 관리 시스템 (v3.3)
+QR 코드 기반 행사 입장 관리 시스템 (v3.4)
 - **백엔드**: Node.js/Express, JWT 기반 QR 생성, SQLite 데이터베이스 전용
 - **프론트엔드**: 바닐라 JavaScript, html5-qrcode 라이브러리
 - **아키텍처**: 단일 백엔드 (포트 5001) + 이벤트별 데이터베이스 분리
@@ -79,9 +79,8 @@ graph LR
         MC --> P2[참가자 관리]
         MC --> P3[QR 스캐너]
         MC --> P4[이벤트 목록]
-        MC --> P5[통계 분석]
-        MC --> P6[설정]
-        MC --> P7[백업 관리]
+        MC --> P5[설정]
+        MC --> P6[백업 관리]
     end
     
     subgraph "Design System"
@@ -165,9 +164,15 @@ sequenceDiagram
     BE-->>FE: 이벤트 정보 응답
 ```
 
-## 최근 변경사항 (2025-07-22 v3.3)
+## 최근 변경사항 (2025-07-23 v3.4)
 
-### 코드 리팩토링 및 모듈화
+### 코드 정리 및 최적화
+- ✅ **통계분석 페이지 제거**: 사용하지 않는 기능 제거
+- ✅ **전체화면 스캐너 개선**: 모바일에서 화면 전체 활용
+- ✅ **모바일 카메라 지원 강화**: 상세한 에러 메시지, 권한 요청 UI
+- ✅ **코드 정리**: 백업 파일 및 레거시 테스트 파일 제거
+
+### 2025-07-22 v3.3
 - ✅ **설정 파일 분리**: `js/config/app-config.js`로 모든 설정값 중앙화
 - ✅ **API 서비스 강화**: `js/services/api-service.js` - 재시도 로직, 로딩 상태 관리, 에러 핸들링 개선
 - ✅ **스캐너 모듈화**: `js/modules/scanner-core.js`로 핵심 기능 분리 (기존 인터페이스 유지)
