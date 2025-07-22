@@ -125,6 +125,13 @@ class ScannerCore {
                     this.showCameraDistanceGuide();
                 }
                 
+                // 전체화면 모드라면 비디오 스타일 강제 적용
+                if (this.isFullscreen) {
+                    setTimeout(() => {
+                        this.forceFullscreenVideo();
+                    }, 500);
+                }
+                
                 console.log('[ScannerCore] 스캐너 시작 완료');
             } else {
                 throw new Error('사용 가능한 카메라가 없습니다');
@@ -174,7 +181,9 @@ class ScannerCore {
                 qrbox: { width: scanSize, height: scanSize },
                 aspectRatio: 1.0,
                 videoConstraints: {
-                    facingMode: "environment"
+                    facingMode: "environment",
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
                 },
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true
@@ -184,7 +193,11 @@ class ScannerCore {
                     Html5QrcodeSupportedFormats.DATA_MATRIX,
                     Html5QrcodeSupportedFormats.AZTEC,
                     Html5QrcodeSupportedFormats.PDF_417
-                ]
+                ],
+                // 전체화면에서는 비디오 뷰를 조정하지 않음
+                showTorchButtonIfSupported: false,
+                useBarCodeDetectorIfSupported: true,
+                disableFlip: true
             };
         }
         
@@ -381,6 +394,11 @@ class ScannerCore {
         if (this.isFullscreen) {
             document.body.classList.add('fullscreen-mode');
             document.body.classList.add('scanning');
+            
+            // 전체화면 진입 시 추가 처리
+            setTimeout(() => {
+                this.forceFullscreenVideo();
+            }, 100);
         } else {
             document.body.classList.remove('fullscreen-mode');
             document.body.classList.remove('scanning');
@@ -392,6 +410,27 @@ class ScannerCore {
             await this.stopScanner();
             await this.startScanner();
         }
+    }
+    
+    // 전체화면 비디오 강제 적용
+    forceFullscreenVideo() {
+        const video = document.querySelector('#reader video');
+        if (video) {
+            video.style.position = 'fixed';
+            video.style.top = '0';
+            video.style.left = '0';
+            video.style.width = '100vw';
+            video.style.height = '100vh';
+            video.style.objectFit = 'cover';
+            video.style.zIndex = '1';
+        }
+        
+        // reader 내부의 모든 div도 전체 크기로
+        const readerDivs = document.querySelectorAll('#reader > div');
+        readerDivs.forEach(div => {
+            div.style.width = '100%';
+            div.style.height = '100%';
+        });
     }
     
     // 카메라 거리 가이드 표시
