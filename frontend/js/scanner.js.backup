@@ -5,7 +5,7 @@
 let html5QrCode = null;
 let isScanning = false;
 const recentScans = new Map();
-const SCAN_COOLDOWN = 3000;
+const SCAN_COOLDOWN = AppConfig.scanner.cooldown;
 
 // 스캐너 프레임 색상 변경 - 더 이상 사용하지 않음
 function setFrameState(state) {

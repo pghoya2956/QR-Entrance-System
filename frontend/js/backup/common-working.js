@@ -2,6 +2,11 @@
  * 공통 유틸리티 및 API 함수
  */
 
+// 설정 파일이 로드될 때까지 대기
+if (typeof FrontendConfig === 'undefined') {
+    console.error('FrontendConfig가 정의되지 않았습니다. frontend.config.js를 먼저 로드하세요.');
+}
+
 // 버전 관리
 const APP_VERSION = '3.1.1';
 
@@ -9,13 +14,13 @@ const APP_VERSION = '3.1.1';
 let currentEventId = null;
 let availableEvents = [];
 
-// API 기본 URL
-const API_BASE_URL = '/api';
+// API 기본 URL (설정에서 가져옴)
+const API_BASE_URL = FrontendConfig.api.baseUrl;
 
 // 이벤트 목록 가져오기
 async function fetchEvents() {
     try {
-        const response = await fetch(`${API_BASE_URL}/events`);
+        const response = await fetch(`${API_BASE_URL}${FrontendConfig.api.endpoints.events}`);
         if (!response.ok) throw new Error('Failed to fetch events');
         
         availableEvents = await response.json();
@@ -31,7 +36,7 @@ async function fetchEvents() {
 // 현재 이벤트 설정
 function setCurrentEvent(eventId) {
     currentEventId = eventId;
-    localStorage.setItem('selectedEventId', eventId);
+    localStorage.setItem(FrontendConfig.storage.keys.currentEventId, eventId);
     console.log(`🎯 이벤트 선택됨: ${eventId}`);
 }
 
@@ -47,7 +52,7 @@ function getApiUrl(path) {
 
 // 저장된 이벤트 복원
 async function restoreSelectedEvent() {
-    const savedEventId = localStorage.getItem('selectedEventId');
+    const savedEventId = localStorage.getItem(FrontendConfig.storage.keys.currentEventId);
     if (savedEventId && availableEvents.length > 0) {
         const event = availableEvents.find(e => e.eventId === savedEventId);
         if (event) {
@@ -92,22 +97,14 @@ function createNavigation(currentPage) {
 }
 
 // API 호출 함수들
-// 새로운 api-service.js에서 정의됨
-/*
 const api = {
     // 참가자 목록 가져오기
     async getAttendees() {
         try {
-            const response = await fetch(getApiUrl('/admin/attendees'));
-            if (!response.ok) throw new Error('Failed to fetch attendees');
-            return await response.json();
+            return await apiClient.get(FrontendConfig.api.endpoints.admin.attendees);
         } catch (error) {
-            console.error('Error fetching attendees:', error);
-            if (error.message.includes('이벤트가 선택되지 않았습니다')) {
-                showToast('이벤트를 먼저 선택해주세요.', 'error');
-            } else {
-                showToast('참가자 목록을 불러올 수 없습니다.', 'error');
-            }
+            const message = await ErrorHandler.handleApiError(error, '참가자 목록을 불러올 수 없습니다.');
+            ErrorHandler.showError(message, 'error');
             throw error;
         }
     },
@@ -115,16 +112,10 @@ const api = {
     // 통계 가져오기
     async getStats() {
         try {
-            const response = await fetch(getApiUrl('/admin/stats'));
-            if (!response.ok) throw new Error('Failed to fetch stats');
-            return await response.json();
+            return await apiClient.get(FrontendConfig.api.endpoints.admin.stats);
         } catch (error) {
-            console.error('Error fetching stats:', error);
-            if (error.message.includes('이벤트가 선택되지 않았습니다')) {
-                showToast('이벤트를 먼저 선택해주세요.', 'error');
-            } else {
-                showToast('통계 정보를 불러올 수 없습니다.', 'error');
-            }
+            const message = await ErrorHandler.handleApiError(error, '통계 정보를 불러올 수 없습니다.');
+            ErrorHandler.showError(message, 'error');
             throw error;
         }
     },
@@ -149,30 +140,51 @@ const api = {
     // QR 체크인 검증
     async verifyCheckin(qrData) {
         try {
-            const response = await fetch(getApiUrl('/checkin/verify'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ qrData })
-            });
-            
-            const result = await response.json();
-            
-            if (!response.ok) {
+            // apiClient가 정의되어 있는지 확인
+            if (typeof apiClient === 'undefined') {
+                console.error('[API 오류] apiClient가 정의되지 않았습니다');
+                // 대체 방법: fetch 직접 사용
+                const response = await fetch(getApiUrl(FrontendConfig.api.endpoints.checkinVerify), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ qrData })
+                });
+                
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    return {
+                        success: false,
+                        status: response.status,
+                        ...result
+                    };
+                }
+                
                 return {
-                    success: false,
-                    status: response.status,
+                    success: true,
                     ...result
                 };
             }
             
+            // apiClient 사용
+            const result = await apiClient.post(FrontendConfig.api.endpoints.checkinVerify, { qrData });
             return {
                 success: true,
                 ...result
             };
         } catch (error) {
-            console.error('Error verifying checkin:', error);
+            console.error('[verifyCheckin 에러]', error);
+            // API 에러는 success: false로 반환
+            if (error.status) {
+                return {
+                    success: false,
+                    status: error.status,
+                    ...error
+                };
+            }
+            // 네트워크 에러는 그대로 throw
             throw error;
         }
     },
@@ -334,7 +346,6 @@ const api = {
         return API_BASE_URL;
     }
 };
-*/
 
 // 통계 표시 업데이트 함수
 function updateStatsDisplay(stats) {

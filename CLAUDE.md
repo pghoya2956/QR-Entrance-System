@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-QR 코드 기반 행사 입장 관리 시스템 (v3.2)
+QR 코드 기반 행사 입장 관리 시스템 (v3.3)
 - **백엔드**: Node.js/Express, JWT 기반 QR 생성, SQLite 데이터베이스 전용
 - **프론트엔드**: 바닐라 JavaScript, html5-qrcode 라이브러리
 - **아키텍처**: 단일 백엔드 (포트 5001) + 이벤트별 데이터베이스 분리
@@ -165,9 +165,16 @@ sequenceDiagram
     BE-->>FE: 이벤트 정보 응답
 ```
 
-## 최근 변경사항 (2025-07-21 v3.2)
+## 최근 변경사항 (2025-07-22 v3.3)
 
-### 프로젝트 정리 및 전체화면 개선
+### 코드 리팩토링 및 모듈화
+- ✅ **설정 파일 분리**: `js/config/app-config.js`로 모든 설정값 중앙화
+- ✅ **API 서비스 강화**: `js/services/api-service.js` - 재시도 로직, 로딩 상태 관리, 에러 핸들링 개선
+- ✅ **스캐너 모듈화**: `js/modules/scanner-core.js`로 핵심 기능 분리 (기존 인터페이스 유지)
+- ✅ **UI 개선**: 카메라 거리 가이드 추가 (30-50cm 권장)
+- ✅ **전체화면 스캔 영역 확대**: 화면의 90% 활용 (최대 800px)
+
+### 2025-07-21 v3.2
 - ✅ **전체화면 스캐너 문제 해결**: z-index 계층 구조 재정립
 - ✅ **불필요한 코드 제거**: 레거시 CSV 관련 코드 완전 제거
 - ✅ **updateRecentCheckins 오류 수정**: scanner.js에서 불필요한 함수 호출 제거
@@ -308,6 +315,20 @@ npm run migrate
 - html5-qrcode 라이브러리
 - 반응형 CSS Grid/Flexbox
 - 모던 UI 디자인 시스템
+
+#### 프론트엔드 모듈 구조
+```
+frontend/js/
+├── config/
+│   └── app-config.js      # 전역 설정 파일
+├── services/
+│   └── api-service.js     # API 서비스 (재시도, 로딩, 에러 처리)
+├── modules/
+│   └── scanner-core.js    # 스캐너 핵심 모듈
+├── common.js              # 공통 유틸리티
+├── audio-feedback.js      # 오디오 피드백
+└── [페이지별 JS 파일들]
+```
 
 ## 주요 기능
 

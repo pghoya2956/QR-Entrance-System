@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>백업 관리 - QR 입장 관리 시스템</title>
+    <title>통계 분석 - QR 입장 관리 시스템</title>
     <link rel="stylesheet" href="css/style.css?v=3.1.1">
+    <!-- Chart.js 라이브러리 -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div class="app-layout">
@@ -60,7 +62,7 @@
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a href="analytics.html" class="sidebar-link">
+                            <a href="analytics.html" class="sidebar-link active">
                                 <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                                 </svg>
@@ -83,7 +85,7 @@
                             </a>
                         </li>
                         <li class="sidebar-menu-item">
-                            <a href="backup.html" class="sidebar-link active">
+                            <a href="backup.html" class="sidebar-link">
                                 <svg class="sidebar-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
                                 </svg>
@@ -101,7 +103,7 @@
             <header class="header">
                 <div class="header-content">
                     <div class="header-left">
-                        <h1 class="header-title">백업 관리</h1>
+                        <h1 class="header-title">통계 분석</h1>
                     </div>
                     
                     <div class="header-right">
@@ -129,91 +131,113 @@
             
             <!-- 페이지 콘텐츠 -->
             <div class="page-content">
-                <!-- 백업 상태 카드 -->
-                <div class="backup-status-cards">
-                    <div class="status-card">
-                        <div class="status-card-icon">
+                <!-- 통계 카드 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                            </svg>
+                        </div>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="totalCount">0</div>
+                            <div class="stat-label">전체 참가자</div>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-card-icon success">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <div class="status-card-content">
-                            <h3 class="status-card-title">마지막 백업</h3>
-                            <p class="status-card-value" id="lastBackupTime">확인 중...</p>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="checkedInCount">0</div>
+                            <div class="stat-label">체크인 완료</div>
                         </div>
                     </div>
                     
-                    <div class="status-card">
-                        <div class="status-card-icon info">
+                    <div class="stat-card">
+                        <div class="stat-card-icon warning">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                         </div>
-                        <div class="status-card-content">
-                            <h3 class="status-card-title">백업 개수</h3>
-                            <p class="status-card-value" id="backupCount">0</p>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="notCheckedInCount">0</div>
+                            <div class="stat-label">미체크인</div>
                         </div>
                     </div>
                     
-                    <div class="status-card">
-                        <div class="status-card-icon warning">
+                    <div class="stat-card">
+                        <div class="stat-card-icon info">
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
                             </svg>
                         </div>
-                        <div class="status-card-content">
-                            <h3 class="status-card-title">총 크기</h3>
-                            <p class="status-card-value" id="totalSize">0 MB</p>
+                        <div class="stat-card-content">
+                            <div class="stat-value" id="attendanceRate">0%</div>
+                            <div class="stat-label">참석률</div>
                         </div>
                     </div>
                 </div>
                 
-                <!-- 즉시 백업 섹션 -->
-                <div class="backup-section">
-                    <h3 class="section-title">즉시 백업</h3>
-                    <div class="backup-card">
-                        <div class="backup-info">
-                            <h4>수동 백업 생성</h4>
-                            <p>현재 시점의 데이터를 즉시 백업합니다. 중요한 작업 전후에 백업을 생성하는 것을 권장합니다.</p>
+                <!-- 차트 섹션 -->
+                <div class="charts-grid">
+                    <!-- 체크인 현황 도넛 차트 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">체크인 현황</h3>
                         </div>
-                        <button class="btn btn-primary" onclick="createBackup()">
-                            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                            </svg>
-                            백업 생성
-                        </button>
+                        <div class="chart-card-body">
+                            <canvas id="checkinChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 시간대별 체크인 차트 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">시간대별 체크인</h3>
+                        </div>
+                        <div class="chart-card-body">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 참가 유형별 통계 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">참가 유형별 통계</h3>
+                        </div>
+                        <div class="chart-card-body">
+                            <canvas id="typeChart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- 회사별 TOP 10 -->
+                    <div class="chart-card">
+                        <div class="chart-card-header">
+                            <h3 class="chart-card-title">회사별 참가자 TOP 10</h3>
+                        </div>
+                        <div class="chart-card-body">
+                            <canvas id="companyChart"></canvas>
+                        </div>
                     </div>
                 </div>
                 
-                <!-- 백업 목록 -->
-                <div class="backup-section">
+                <!-- 최근 체크인 목록 -->
+                <div class="recent-checkins">
                     <div class="section-header">
-                        <h3 class="section-title">백업 목록</h3>
-                        <button class="btn btn-outline btn-sm" onclick="refreshBackupList()">
+                        <h3 class="section-title">최근 체크인</h3>
+                        <button class="btn btn-outline btn-sm" onclick="refreshAnalytics()">
                             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                             </svg>
                             새로고침
                         </button>
                     </div>
-                    
-                    <div class="backup-list" id="backupList">
-                        <!-- 동적으로 생성될 백업 항목들 -->
-                    </div>
-                    
-                    <!-- 로딩 상태 -->
-                    <div class="loading-state" id="loadingState" style="display: none;">
-                        <div class="spinner"></div>
-                        <p>백업 목록을 불러오는 중...</p>
-                    </div>
-                    
-                    <!-- 빈 상태 -->
-                    <div class="empty-state" id="emptyState" style="display: none;">
-                        <svg width="64" height="64" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                        </svg>
-                        <h3>백업이 없습니다</h3>
-                        <p>아직 생성된 백업이 없습니다</p>
+                    <div class="recent-checkins-list" id="recentCheckinsList">
+                        <!-- 동적으로 추가됨 -->
                     </div>
                 </div>
             </div>
@@ -225,15 +249,16 @@
     
     <!-- CSS 추가 -->
     <style>
-        /* 백업 상태 카드 */
-        .backup-status-cards {
+        /* 통계 그리드 */
+        .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 24px;
             margin-bottom: 32px;
         }
         
-        .status-card {
+        /* 통계 카드 */
+        .stat-card {
             background: white;
             border-radius: 12px;
             padding: 24px;
@@ -244,47 +269,90 @@
             border: 1px solid var(--border-color);
         }
         
-        .status-card-icon {
+        .stat-card-icon {
             width: 56px;
             height: 56px;
             border-radius: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
+            background: var(--primary-light);
+            color: var(--primary-color);
+        }
+        
+        .stat-card-icon.success {
             background: rgba(16, 185, 129, 0.1);
             color: rgb(16, 185, 129);
         }
         
-        .status-card-icon.info {
-            background: rgba(59, 130, 246, 0.1);
-            color: rgb(59, 130, 246);
-        }
-        
-        .status-card-icon.warning {
+        .stat-card-icon.warning {
             background: rgba(245, 158, 11, 0.1);
             color: rgb(245, 158, 11);
         }
         
-        .status-card-icon svg {
+        .stat-card-icon.info {
+            background: rgba(59, 130, 246, 0.1);
+            color: rgb(59, 130, 246);
+        }
+        
+        .stat-card-icon svg {
             width: 28px;
             height: 28px;
         }
         
-        .status-card-title {
-            font-size: 14px;
-            color: var(--text-secondary);
-            margin-bottom: 4px;
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1;
         }
         
-        .status-card-value {
-            font-size: 24px;
-            font-weight: 700;
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        
+        /* 차트 그리드 */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+        
+        /* 차트 카드 */
+        .chart-card {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
+        }
+        
+        .chart-card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .chart-card-title {
+            font-size: 18px;
+            font-weight: 600;
             color: var(--text-primary);
         }
         
-        /* 백업 섹션 */
-        .backup-section {
-            margin-bottom: 32px;
+        .chart-card-body {
+            padding: 24px;
+            height: 300px;
+            position: relative;
+        }
+        
+        /* 최근 체크인 */
+        .recent-checkins {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border-color);
         }
         
         .section-header {
@@ -295,140 +363,55 @@
         }
         
         .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: var(--text-primary);
-        }
-        
-        /* 백업 카드 */
-        .backup-card {
-            background: white;
-            border-radius: 12px;
-            padding: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
-        }
-        
-        .backup-info h4 {
             font-size: 18px;
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 8px;
         }
         
-        .backup-info p {
-            color: var(--text-secondary);
-            margin: 0;
-        }
-        
-        /* 백업 목록 */
-        .backup-list {
+        .recent-checkins-list {
             display: flex;
             flex-direction: column;
+            gap: 12px;
+        }
+        
+        .checkin-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: var(--background);
+            border-radius: 8px;
             gap: 16px;
         }
         
-        .backup-item {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
+        .checkin-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            color: var(--primary-color);
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-            border: 1px solid var(--border-color);
-            transition: all 0.2s ease;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
         }
         
-        .backup-item:hover {
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-        
-        .backup-item-info {
+        .checkin-info {
             flex: 1;
         }
         
-        .backup-item-name {
+        .checkin-name {
             font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 8px;
         }
         
-        .backup-item-details {
-            display: flex;
-            gap: 24px;
+        .checkin-company {
             font-size: 14px;
             color: var(--text-secondary);
         }
         
-        .backup-item-detail {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        
-        .backup-item-detail svg {
-            width: 16px;
-            height: 16px;
-        }
-        
-        .backup-item-actions {
-            display: flex;
-            gap: 8px;
-        }
-        
-        /* 로딩 상태 */
-        .loading-state {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 60px 40px;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid var(--border-color);
-            border-top-color: var(--primary-color);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 16px;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        /* 빈 상태 */
-        .empty-state {
-            padding: 60px 40px;
-            text-align: center;
-            background: white;
-            border-radius: 12px;
-            border: 1px solid var(--border-color);
-        }
-        
-        .empty-state svg {
-            color: var(--text-tertiary);
-            margin-bottom: 24px;
-        }
-        
-        .empty-state h3 {
-            font-size: 24px;
-            font-weight: 600;
-            color: var(--text-primary);
-            margin-bottom: 12px;
-        }
-        
-        .empty-state p {
-            font-size: 16px;
+        .checkin-time {
+            font-size: 14px;
             color: var(--text-secondary);
         }
         
@@ -446,6 +429,6 @@
     
     <!-- JavaScript -->
     <script src="js/config/app-config.js?v=3.2.0"></script>    <script src="js/common.js?v=3.1.1"></script>
-    <script src="js/services/api-service.js?v=3.2.0"></script>    <script src="js/backup.js?v=3.1.1"></script>
+    <script src="js/analytics.js?v=3.1.1"></script>
 </body>
 </html>
