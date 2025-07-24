@@ -669,6 +669,7 @@ class ScannerCore {
             video.style.height = '100vh';
             video.style.objectFit = 'cover';
             video.style.zIndex = '1';
+            video.style.transform = 'scaleX(-1)';  // 좌우반전
         }
         
         // reader 내부의 모든 div도 전체 크기로

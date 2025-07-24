@@ -363,6 +363,7 @@
             object-fit: contain !important;  /* 비디오 전체가 보이도록 설정 */
             object-position: center;
             border-radius: 12px;
+            transform: scaleX(-1);  /* 좌우반전 */
         }
         
         /* 일반 모드 스캐너 프레임 오버레이 */
@@ -704,10 +705,10 @@
             left: 0 !important;
             width: 100vw !important;
             height: 100vh !important;
+            transform: scaleX(-1) !important;  /* 좌우반전 */
             object-fit: cover !important;  /* 화면을 꽉 채우도록 */
             object-position: center;
             filter: brightness(1.1) contrast(1.1); /* 명도와 대비 향상 */
-            transform: none !important; /* 전체화면에서는 좌우반전 제거 */
             z-index: 1;
         }
         
