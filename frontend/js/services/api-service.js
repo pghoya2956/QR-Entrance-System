@@ -58,7 +58,8 @@ class APIService {
             }
             
             // 409 Conflict는 재시도하지 않음 (이미 체크인된 상태)
-            if (response.status === 409) {
+            // 404 Not Found도 재시도하지 않음 (등록되지 않은 사용자)
+            if (response.status === 409 || response.status === 404) {
                 return response;
             }
             

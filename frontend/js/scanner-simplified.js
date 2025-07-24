@@ -14,6 +14,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     setInterval(() => {
         updateScannerStats();
     }, 30000); // 30초마다 업데이트
+    
+    // 체크인 완료 이벤트 리스너
+    window.addEventListener('checkinCompleted', (event) => {
+        console.log('[Scanner] 체크인 완료 이벤트 수신:', event.detail);
+        if (event.detail) {
+            updateRecentCheckins(event.detail);
+        }
+    });
 });
 
 // 스캔 통계 업데이트

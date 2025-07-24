@@ -973,13 +973,19 @@ let currentQRData = null;
 // QR 코드 생성
 async function generateQRCode(registrationNumber, name) {
     try {
-        // API 호출
+        // API 호출 - 인증 헤더 포함
+        const token = localStorage.getItem('authToken');
         const response = await fetch(getApiUrl(`/qr/generate/${registrationNumber}`), {
-            method: 'GET'
+            method: 'GET',
+            headers: {
+                'Authorization': token ? `Bearer ${token}` : ''
+            },
+            credentials: 'include'
         });
 
         if (!response.ok) {
-            throw new Error('QR 코드 생성 실패');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'QR 코드 생성 실패');
         }
 
         const result = await response.json();

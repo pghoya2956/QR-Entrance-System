@@ -185,6 +185,7 @@
                         <div class="card">
                             <div class="card-header">
                                 <h3 class="card-title">스캔 결과</h3>
+                                <button id="clearResult" class="btn btn-secondary btn-sm" style="display: none;">Clear</button>
                             </div>
                             <div id="resultDisplay" class="result-display">
                                 <div class="empty-result">
@@ -1125,6 +1126,35 @@
                 processCheckin: typeof window.processCheckin
             });
         };
+        
+        // Clear 버튼 이벤트 리스너
+        document.addEventListener('DOMContentLoaded', () => {
+            const clearBtn = document.getElementById('clearResult');
+            const resultDisplay = document.getElementById('resultDisplay');
+            
+            if (clearBtn) {
+                clearBtn.addEventListener('click', () => {
+                    resultDisplay.innerHTML = `
+                        <div class="empty-result">
+                            <div class="empty-result-icon">📷</div>
+                            <div class="empty-result-text">QR 코드를 스캔해주세요</div>
+                        </div>
+                    `;
+                    clearBtn.style.display = 'none';
+                });
+            }
+            
+            // 결과가 표시될 때 Clear 버튼 보이기
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'childList' && resultDisplay.querySelector('.result-message')) {
+                        clearBtn.style.display = 'block';
+                    }
+                });
+            });
+            
+            observer.observe(resultDisplay, { childList: true });
+        });
     </script>
     
     <!-- 글로벌 로더 -->
@@ -1176,6 +1206,25 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
+        }
+        
+        /* 스캔 결과 스타일 */
+        .result-message {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .scan-time {
+            font-size: 14px;
+            color: var(--text-secondary);
+            opacity: 0.8;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
     </style>
 </body>

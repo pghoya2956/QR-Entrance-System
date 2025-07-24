@@ -410,7 +410,13 @@ class ScannerCore {
                 stats.total++;
                 localStorage.setItem('scannerStats', JSON.stringify(stats));
             } else {
-                const message = `✗ ${result.error || '체크인 실패'}`;
+                // 404 에러인 경우 QR 데이터 포함
+                let message;
+                if (result.status === 404) {
+                    message = `✗ 등록되지 않은 QR 코드: ${qrData}`;
+                } else {
+                    message = `✗ ${result.error || '체크인 실패'}`;
+                }
                 this.showResultMessage(message, 'error');
                 audioFeedback.error();
                 
@@ -440,9 +446,14 @@ class ScannerCore {
     // 일반 모드 결과 표시
     showResult(message, type) {
         const resultDiv = document.getElementById('resultDisplay');
+        const scanTime = new Date().toLocaleTimeString('ko-KR');
+        
         resultDiv.style.display = 'block';
         resultDiv.className = `result-display result-${type}`;
-        resultDiv.innerHTML = message;
+        resultDiv.innerHTML = `
+            <div class="result-message">${message}</div>
+            <div class="scan-time">스캔 시간: ${scanTime}</div>
+        `;
         
         this.setFrameState(type === 'warning' ? 'detecting' : type);
         
@@ -450,9 +461,7 @@ class ScannerCore {
             this.setFrameState('');
         }, 1000);
         
-        setTimeout(() => {
-            resultDiv.style.display = 'none';
-        }, 3000);
+        // 결과를 계속 표시 (자동 숨김 제거)
     }
     
     // 전체화면 모드 결과 표시
