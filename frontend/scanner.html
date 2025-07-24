@@ -234,13 +234,21 @@
     <style>
         /* 스캐너 레이아웃 */
         .scanner-layout {
-            display: grid;
-            grid-template-columns: 1fr 400px;
+            display: flex;
+            flex-direction: column;
             gap: 24px;
         }
         
         .scanner-card {
             min-height: 600px;
+            width: 100%;
+        }
+        
+        .scanner-info {
+            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
         }
         
         .scanner-container {
@@ -517,13 +525,8 @@
         
         /* 반응형 */
         @media (max-width: 1024px) {
-            .scanner-layout {
-                grid-template-columns: 1fr;
-            }
-            
             .scanner-info {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                grid-template-columns: 1fr;
             }
         }
         
