@@ -57,6 +57,11 @@ class APIService {
                 return;
             }
             
+            // 409 Conflict는 재시도하지 않음 (이미 체크인된 상태)
+            if (response.status === 409) {
+                return response;
+            }
+            
             if (!response.ok && retries > 0) {
                 await new Promise(resolve => setTimeout(resolve, this.retryDelay));
                 return this.fetchWithRetry(url, options, retries - 1);
@@ -167,6 +172,17 @@ class APIService {
             const result = await response.json();
             
             if (!response.ok) {
+                // 409 Conflict는 정상적인 중복 체크인 응답으로 처리
+                if (response.status === 409) {
+                    return {
+                        success: false,
+                        status: response.status,
+                        error: '이미 체크인되었습니다',
+                        attendeeInfo: result.attendeeInfo || result.attendee,
+                        ...result
+                    };
+                }
+                
                 return {
                     success: false,
                     status: response.status,

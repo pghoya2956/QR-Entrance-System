@@ -385,14 +385,40 @@ class ScannerCore {
                 const message = `✓ ${result.attendeeInfo.name}님 체크인 완료!<br><small>${result.attendeeInfo.company}</small>`;
                 this.showResultMessage(message, 'success');
                 audioFeedback.success();
-            } else if (result.error && result.error.includes('이미 체크인')) {
-                const message = `⚠ ${result.attendeeInfo.name}님은 이미 체크인됨<br><small>${result.attendeeInfo.company}</small>`;
-                this.showResultMessage(message, 'warning');
+                
+                // 통계 업데이트
+                const stats = JSON.parse(localStorage.getItem('scannerStats') || '{"total": 0, "success": 0, "failed": 0}');
+                stats.total++;
+                stats.success++;
+                localStorage.setItem('scannerStats', JSON.stringify(stats));
+                
+                // 최근 체크인 목록 업데이트
+                this.updateRecentCheckins(result.attendeeInfo);
+            } else if (result.status === 409 || (result.error && result.error.includes('이미 체크인'))) {
+                // 409 Conflict - 이미 체크인된 상태
+                if (result.attendeeInfo) {
+                    const message = `⚠ ${result.attendeeInfo.name}님은 이미 체크인됨<br><small>${result.attendeeInfo.company}</small>`;
+                    this.showResultMessage(message, 'warning');
+                } else {
+                    const message = `⚠ 이미 체크인되었습니다`;
+                    this.showResultMessage(message, 'warning');
+                }
                 audioFeedback.duplicate();
+                
+                // 통계 업데이트 (중복은 실패로 카운트하지 않음)
+                const stats = JSON.parse(localStorage.getItem('scannerStats') || '{"total": 0, "success": 0, "failed": 0}');
+                stats.total++;
+                localStorage.setItem('scannerStats', JSON.stringify(stats));
             } else {
-                const message = `✗ ${result.error}`;
+                const message = `✗ ${result.error || '체크인 실패'}`;
                 this.showResultMessage(message, 'error');
                 audioFeedback.error();
+                
+                // 통계 업데이트
+                const stats = JSON.parse(localStorage.getItem('scannerStats') || '{"total": 0, "success": 0, "failed": 0}');
+                stats.total++;
+                stats.failed++;
+                localStorage.setItem('scannerStats', JSON.stringify(stats));
             }
         } catch (error) {
             console.error('[ScannerCore] 체크인 오류:', error);
@@ -449,6 +475,35 @@ class ScannerCore {
     // 프레임 상태 설정 (레거시 호환)
     setFrameState(state) {
         // 더 이상 사용하지 않음
+    }
+    
+    // 최근 체크인 목록 업데이트
+    updateRecentCheckins(attendeeInfo) {
+        try {
+            const recentCheckins = JSON.parse(localStorage.getItem('recentCheckins') || '[]');
+            
+            // 새로운 체크인 정보 추가 (최신순)
+            recentCheckins.unshift({
+                name: attendeeInfo.name,
+                company: attendeeInfo.company,
+                registrationNumber: attendeeInfo.registrationNumber,
+                time: new Date().toISOString()
+            });
+            
+            // 최대 20개까지만 유지
+            if (recentCheckins.length > 20) {
+                recentCheckins.pop();
+            }
+            
+            localStorage.setItem('recentCheckins', JSON.stringify(recentCheckins));
+            
+            // 이벤트 발생 (UI 업데이트를 위해)
+            window.dispatchEvent(new CustomEvent('checkinCompleted', { 
+                detail: attendeeInfo 
+            }));
+        } catch (error) {
+            console.error('[ScannerCore] 최근 체크인 목록 업데이트 오류:', error);
+        }
     }
     
     // 상태 업데이트

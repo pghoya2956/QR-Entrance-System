@@ -11,7 +11,9 @@ const errorAlert = document.getElementById('errorAlert');
 const successAlert = document.getElementById('successAlert');
 
 // API URL 설정
-const API_BASE_URL = window.AppConfig ? AppConfig.api.baseUrl : '/api';
+const API_BASE_URL = window.location.hostname === 'localhost' && window.location.port === '8080' 
+    ? 'http://localhost:5001/api' 
+    : (window.AppConfig ? AppConfig.api.baseUrl : '/api');
 
 // 이미 로그인되어 있는지 확인
 async function checkAuthStatus() {

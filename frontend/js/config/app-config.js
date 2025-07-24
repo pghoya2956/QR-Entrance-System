@@ -6,7 +6,9 @@
 const AppConfig = {
     // API 설정
     api: {
-        baseUrl: '/api',
+        baseUrl: window.location.hostname === 'localhost' && window.location.port === '8080' 
+            ? 'http://localhost:5001/api' 
+            : '/api',
         timeout: 30000,
         retryCount: 3,
         retryDelay: 1000
@@ -14,7 +16,7 @@ const AppConfig = {
     
     // QR 스캐너 설정
     scanner: {
-        cooldown: 3000,
+        cooldown: 5000, // 5초로 증가 (중복 스캔 방지)
         qrbox: { width: 500, height: 500 }, // 기존 200에서 500으로 확대
         fps: 10,
         aspectRatio: 1.0,

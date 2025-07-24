@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # 개발 환경에서는 프론트엔드를 로컬에서 직접 실행
   # npm run dev 또는 live-server 사용
@@ -8,7 +6,7 @@ services:
   backend-dev:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.dev
     container_name: qr-backend-dev
     ports:
       - "5001:5001"

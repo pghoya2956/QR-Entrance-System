@@ -973,7 +973,7 @@
         }
     </style>
     
-    <script src="js/config/app-config.js?v=3.2.0"></script>
+    <script src="js/config/app-config.js?v=3.5.1"></script>
     <script src="js/common.js?v=3.1.1"></script>
     <script src="js/services/api-service.js?v=3.2.0"></script>
     <script src="js/audio-feedback.js?v=3.1.1"></script>
@@ -1071,9 +1071,13 @@
         // 스캔 통계 업데이트
         function updateScannerStats() {
             const stats = JSON.parse(localStorage.getItem('scannerStats') || '{"total": 0, "success": 0, "failed": 0}');
-            document.getElementById('totalScans').textContent = stats.total || 0;
-            document.getElementById('successScans').textContent = stats.success || 0;
-            document.getElementById('failedScans').textContent = stats.failed || 0;
+            const totalScansEl = document.getElementById('totalScans');
+            const successScansEl = document.getElementById('successScans');
+            const failedScansEl = document.getElementById('failedScans');
+            
+            if (totalScansEl) totalScansEl.textContent = stats.total || 0;
+            if (successScansEl) successScansEl.textContent = stats.success || 0;
+            if (failedScansEl) failedScansEl.textContent = stats.failed || 0;
         }
         
         // 최근 체크인 목록 로드

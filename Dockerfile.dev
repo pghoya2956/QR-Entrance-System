@@ -1,0 +1,20 @@
+# Node.js 18 Alpine 이미지 사용 (가벼움)
+FROM node:18-alpine
+
+# SQLite3 및 필요한 패키지 설치
+RUN apk add --no-cache sqlite sqlite-dev python3 make g++
+
+# 작업 디렉토리 설정
+WORKDIR /app
+
+# package.json과 package-lock.json 복사
+COPY package*.json ./
+
+# 모든 의존성 설치 (devDependencies 포함)
+RUN npm install
+
+# 포트 노출 (환경변수로 설정 가능)
+EXPOSE ${PORT:-5001}
+
+# nodemon으로 애플리케이션 시작
+CMD ["npm", "run", "dev"]

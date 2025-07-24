@@ -10,7 +10,9 @@ let currentEventId = null;
 let availableEvents = [];
 
 // API 기본 URL
-const API_BASE_URL = '/api';
+const API_BASE_URL = window.location.hostname === 'localhost' && window.location.port === '8080' 
+    ? 'http://localhost:5001/api' 
+    : '/api';
 
 // 인증 토큰 가져오기
 function getAuthToken() {
@@ -45,7 +47,7 @@ async function fetchWithAuth(url, options = {}) {
 // 인증 상태 체크
 async function checkAuth() {
     try {
-        const response = await fetchWithAuth('/api/auth/check');
+        const response = await fetchWithAuth(`${API_BASE_URL}/auth/check`);
         if (!response || !response.ok) {
             throw new Error('Unauthorized');
         }
@@ -648,3 +650,23 @@ function initializeHeader() {
 document.addEventListener('DOMContentLoaded', function() {
     initializeHeader();
 });
+
+// ---------------- Stagewise Toolbar Integration (Development Only) ----------------
+(function() {
+    const isDev = ['localhost', '127.0.0.1'].includes(window.location.hostname) || window.location.port === '8080';
+    if (!isDev) return;
+
+    // Dynamically import the Stagewise toolbar via ESM CDN only during development
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.textContent = `
+        import { initToolbar } from 'https://cdn.jsdelivr.net/npm/@stagewise/toolbar/+esm';
+        try {
+            initToolbar();
+            console.info('🛠️  Stagewise toolbar initialized');
+        } catch (e) {
+            console.error('Stagewise toolbar initialization failed:', e);
+        }
+    `;
+    document.head.appendChild(script);
+})();
