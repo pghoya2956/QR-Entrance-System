@@ -31,15 +31,25 @@ class ScannerCore {
         // 이벤트 리스너 설정
         this.setupEventListeners();
         
+        // 초기 상태 메시지
+        this.updateStatus('카메라 권한 확인 중...');
+        
         try {
             // 카메라 권한 요청
             await this.requestCameraPermission();
             
-            // 스캐너 시작
-            await this.startScanner();
+            // 약간의 지연 후 스캐너 시작 (권한 부여 직후 바로 시작하면 문제가 될 수 있음)
+            setTimeout(async () => {
+                try {
+                    await this.startScanner();
+                } catch (err) {
+                    console.error('[ScannerCore] 스캐너 시작 실패:', err);
+                    this.updateStatus('스캐너 시작 실패: ' + err.message);
+                }
+            }, 500);
         } catch (err) {
             console.error('[ScannerCore] 초기화 실패:', err);
-            // 에러가 발생해도 UI는 표시되도록 함
+            this.updateStatus('카메라 권한 확인 실패: ' + err.message);
         }
     }
     
@@ -80,6 +90,18 @@ class ScannerCore {
         const toggleCameraBtn = document.getElementById('toggleCamera');
         if (toggleCameraBtn) {
             toggleCameraBtn.addEventListener('click', () => this.toggleCamera());
+        }
+        
+        // 카메라 선택
+        const cameraSelect = document.getElementById('cameraSelect');
+        if (cameraSelect) {
+            cameraSelect.addEventListener('change', async (e) => {
+                const selectedCameraId = e.target.value;
+                if (selectedCameraId && selectedCameraId !== this.currentCameraId) {
+                    console.log('[ScannerCore] 카메라 변경:', selectedCameraId);
+                    await this.switchCamera(selectedCameraId);
+                }
+            });
         }
         
         // 전체화면 변경 감지
@@ -159,17 +181,51 @@ class ScannerCore {
             console.log('[ScannerCore] 사용 가능한 카메라:', this.cameras);
             
             if (this.cameras && this.cameras.length > 0) {
-                // 후면 카메라 우선
-                const backCamera = this.cameras.find(camera => 
-                    camera.label.toLowerCase().includes('back') || 
-                    camera.label.toLowerCase().includes('rear')
-                );
-                this.currentCameraId = backCamera ? backCamera.id : this.cameras[0].id;
+                // 카메라 목록 표시 (디버그용)
+                this.cameras.forEach((camera, index) => {
+                    console.log(`[카메라 ${index}] ${camera.label} (ID: ${camera.id})`);
+                });
+                
+                // Chrome에서 iPhone 카메라가 안 보이는 경우 안내
+                const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+                if (isChrome && this.cameras.length === 1 && !this.cameras.some(cam => 
+                    cam.label.toLowerCase().includes('iphone') || 
+                    cam.label.toLowerCase().includes('continuity')
+                )) {
+                    console.log('[ScannerCore] Chrome에서는 iPhone Continuity Camera가 지원되지 않습니다. Safari를 사용해주세요.');
+                }
+                
+                // currentCameraId가 설정되지 않은 경우에만 자동 선택
+                if (!this.currentCameraId) {
+                    // iPhone/Continuity Camera 찾기
+                    const iphoneCamera = this.cameras.find(camera => 
+                        camera.label.toLowerCase().includes('iphone') || 
+                        camera.label.toLowerCase().includes('continuity')
+                    );
+                    
+                    if (iphoneCamera) {
+                        console.log('[ScannerCore] iPhone 카메라 발견:', iphoneCamera.label);
+                        this.currentCameraId = iphoneCamera.id;
+                    } else {
+                        // 후면 카메라 우선
+                        const backCamera = this.cameras.find(camera => 
+                            camera.label.toLowerCase().includes('back') || 
+                            camera.label.toLowerCase().includes('rear')
+                        );
+                        this.currentCameraId = backCamera ? backCamera.id : this.cameras[0].id;
+                    }
+                }
+                
+                // 카메라 선택 드롭다운 업데이트
+                this.updateCameraSelect();
                 
                 // 설정 가져오기
                 const config = this.getScannerConfig();
                 
                 // 스캐너 시작
+                console.log('[ScannerCore] 스캐너 시작 - 카메라 ID:', this.currentCameraId);
+                console.log('[ScannerCore] 스캐너 설정:', config);
+                
                 await this.html5QrCode.start(
                     this.currentCameraId,
                     config,
@@ -562,6 +618,75 @@ class ScannerCore {
         };
         
         reader.appendChild(btn);
+    }
+    
+    // 카메라 선택 드롭다운 업데이트
+    updateCameraSelect() {
+        const cameraSelect = document.getElementById('cameraSelect');
+        if (!cameraSelect || !this.cameras || this.cameras.length === 0) return;
+        
+        // 카메라가 2개 이상일 때만 표시
+        if (this.cameras.length > 1) {
+            cameraSelect.style.display = 'block';
+            cameraSelect.innerHTML = '';
+            
+            this.cameras.forEach(camera => {
+                const option = document.createElement('option');
+                option.value = camera.id;
+                option.textContent = this.formatCameraLabel(camera.label || `카메라 ${camera.id}`);
+                
+                if (camera.id === this.currentCameraId) {
+                    option.selected = true;
+                }
+                
+                cameraSelect.appendChild(option);
+            });
+        }
+    }
+    
+    // 카메라 라벨 포맷팅
+    formatCameraLabel(label) {
+        // iPhone/Continuity Camera 강조
+        if (label.toLowerCase().includes('iphone')) {
+            return `📱 ${label}`;
+        } else if (label.toLowerCase().includes('continuity')) {
+            return `📱 ${label}`;
+        } else if (label.toLowerCase().includes('back') || label.toLowerCase().includes('rear')) {
+            return `📷 ${label} (후면)`;
+        } else if (label.toLowerCase().includes('front')) {
+            return `🤳 ${label} (전면)`;
+        }
+        return label;
+    }
+    
+    // 카메라 전환
+    async switchCamera(cameraId) {
+        if (!cameraId || cameraId === this.currentCameraId) return;
+        
+        console.log('[ScannerCore] 카메라 전환 시작:', cameraId);
+        
+        // 선택된 카메라 정보 확인
+        const selectedCamera = this.cameras.find(cam => cam.id === cameraId);
+        console.log('[ScannerCore] 선택된 카메라:', selectedCamera);
+        
+        try {
+            // 현재 스캐너 중지
+            if (this.isScanning) {
+                await this.stopScanner();
+            }
+            
+            // 새 카메라로 설정
+            this.currentCameraId = cameraId;
+            console.log('[ScannerCore] 새 카메라 ID 설정:', this.currentCameraId);
+            
+            // 스캐너 재시작
+            await this.startScanner();
+            
+            console.log('[ScannerCore] 카메라 전환 완료');
+        } catch (err) {
+            console.error('[ScannerCore] 카메라 전환 오류:', err);
+            this.updateStatus('카메라 전환 실패');
+        }
     }
 }
 

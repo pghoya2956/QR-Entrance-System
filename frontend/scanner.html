@@ -99,23 +99,31 @@
                         <h1 class="header-title">QR 스캐너</h1>
                     </div>
                     
-                    <div class="header-right">
+                    <div class="header-right header-actions">
                         <select class="event-select" id="eventSelect" onchange="handleEventChange()">
                             <option value="">이벤트 선택</option>
                         </select>
                         
-                        <button class="header-btn">
+                        <button class="header-btn header-notification-btn">
                             <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                             </svg>
                             <span class="header-notification-badge"></span>
                         </button>
                         
-                        <div class="header-user">
+                        <div class="header-user dropdown" onclick="toggleDropdown(this)">
                             <div class="header-user-avatar">관</div>
                             <div class="header-user-info">
                                 <div class="header-user-name">관리자</div>
                                 <div class="header-user-role">Administrator</div>
+                            </div>
+                            <div class="dropdown-menu">
+                                <a href="#" onclick="logout(); return false;" class="dropdown-item">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                                    </svg>
+                                    로그아웃
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -132,6 +140,9 @@
                         <div class="card-header">
                             <h3 class="card-title">카메라 스캐너</h3>
                             <div class="card-actions">
+                                <select id="cameraSelect" class="camera-select" style="display: none;">
+                                    <option value="">카메라 선택</option>
+                                </select>
                                 <button id="toggleFullscreen" class="btn btn-primary">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path>
@@ -469,6 +480,29 @@
             align-items: center;
             gap: 12px;
             animation: fadeIn 0.3s ease;
+        }
+        
+        /* 카메라 선택 드롭다운 */
+        .camera-select {
+            padding: 8px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            background: var(--background);
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: 12px;
+            min-width: 200px;
+        }
+        
+        .camera-select:hover {
+            border-color: var(--primary-color);
+        }
+        
+        .camera-select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
         }
         
         .distance-icon {
@@ -947,6 +981,25 @@
     <script src="js/scanner-simplified.js?v=3.2.0"></script>
     
     <script>
+        // 드롭다운 토글 함수
+        function toggleDropdown(element) {
+            const menu = element.querySelector('.dropdown-menu');
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+            } else {
+                // 다른 드롭다운 닫기
+                document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+                menu.classList.add('show');
+            }
+        }
+        
+        // 클릭 외부 영역 클릭시 드롭다운 닫기
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                document.querySelectorAll('.dropdown-menu.show').forEach(m => m.classList.remove('show'));
+            }
+        });
+        
         // 이벤트 드롭다운 로드
         function loadEventOptions() {
             const selectElement = document.getElementById('eventSelect');

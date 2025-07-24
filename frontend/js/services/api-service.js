@@ -34,12 +34,28 @@ class APIService {
             const controller = new AbortController();
             const timeoutId = setTimeout(() => controller.abort(), this.timeout);
             
+            // 인증 토큰 추가
+            const token = localStorage.getItem('authToken');
+            const headers = {
+                ...options.headers,
+                'Authorization': token ? `Bearer ${token}` : undefined
+            };
+            
             const response = await fetch(url, {
                 ...options,
+                headers,
+                credentials: 'include',
                 signal: controller.signal
             });
             
             clearTimeout(timeoutId);
+            
+            // 401 에러시 로그인 페이지로 리다이렉션
+            if (response.status === 401) {
+                const currentPath = window.location.pathname + window.location.search;
+                window.location.href = `/login.html?returnUrl=${encodeURIComponent(currentPath)}`;
+                return;
+            }
             
             if (!response.ok && retries > 0) {
                 await new Promise(resolve => setTimeout(resolve, this.retryDelay));
@@ -127,7 +143,7 @@ class APIService {
         try {
             const response = await this.fetchWithRetry(
                 this.getApiUrl(`/admin/attendee/${registrationNumber}/toggle-checkin`),
-                { method: 'POST' }
+                { method: 'PUT' }
             );
             if (!response.ok) throw new Error('Failed to toggle checkin');
             return await response.json();
@@ -230,7 +246,7 @@ class APIService {
         }
     }
     
-    async bulkAddAttendees(attendees) {
+    async addAttendeesBulk(attendees) {
         try {
             const response = await this.fetchWithRetry(
                 this.getApiUrl('/admin/attendees/bulk'),
@@ -252,7 +268,7 @@ class APIService {
     async deleteAttendee(registrationNumber) {
         try {
             const response = await this.fetchWithRetry(
-                this.getApiUrl(`/admin/attendee/${registrationNumber}`),
+                this.getApiUrl(`/admin/attendees/${registrationNumber}`),
                 { method: 'DELETE' }
             );
             

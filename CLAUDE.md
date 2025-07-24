@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-QR 코드 기반 행사 입장 관리 시스템 (v3.4)
+QR 코드 기반 행사 입장 관리 시스템 (v3.5)
 - **백엔드**: Node.js/Express, JWT 기반 QR 생성, SQLite 데이터베이스 전용
 - **프론트엔드**: 바닐라 JavaScript, html5-qrcode 라이브러리
 - **아키텍처**: 단일 백엔드 (포트 5001) + 이벤트별 데이터베이스 분리
@@ -164,9 +164,17 @@ sequenceDiagram
     BE-->>FE: 이벤트 정보 응답
 ```
 
-## 최근 변경사항 (2025-07-23 v3.4)
+## 최근 변경사항 (2025-07-23 v3.5)
 
-### 코드 정리 및 최적화
+### 로그인 기능 추가
+- ✅ **JWT 기반 인증 시스템**: 모든 API 엔드포인트에 인증 필수
+- ✅ **로그인 페이지**: `/login.html` - 관리자 비밀번호로 인증
+- ✅ **인증 토큰 관리**: httpOnly 쿠키와 localStorage 이중 저장
+- ✅ **자동 리다이렉션**: 미인증 접근 시 로그인 페이지로 이동
+- ✅ **로그아웃 기능**: 헤더 드롭다운 메뉴에서 로그아웃
+- ✅ **환경변수 설정**: `ADMIN_PASSWORD`로 초기 비밀번호 설정 가능
+
+### 2025-07-23 v3.4
 - ✅ **통계분석 페이지 제거**: 사용하지 않는 기능 제거
 - ✅ **전체화면 스캐너 개선**: 모바일에서 화면 전체 활용
 - ✅ **모바일 카메라 지원 강화**: 상세한 에러 메시지, 권한 요청 UI
@@ -195,10 +203,23 @@ sequenceDiagram
 
 ### 환경 설정
 ```env
+# 서버 설정
 PORT=5001
 JWT_SECRET=qr-entrance-secret-key-2025
+
+# 인증 설정
+ADMIN_PASSWORD=admin123          # 관리자 비밀번호
+PASSWORD_SALT=qr-entrance-salt-2025
+TOKEN_EXPIRY=24h
+
+# 백업 설정
 BACKUP_ON_START=false
-# USE_DATABASE 환경변수 제거됨 - 항상 SQLite 사용
+BACKUP_ENABLED=true
+BACKUP_SCHEDULE=0 2 * * *
+BACKUP_RETENTION=30
+
+# CORS 설정
+CORS_ORIGIN=*
 ```
 
 ## 문제 해결 가이드

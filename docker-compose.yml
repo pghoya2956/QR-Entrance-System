@@ -30,6 +30,9 @@ services:
     environment:
       - PORT=5001
       - JWT_SECRET=qr-entrance-secret-key-2025
+      - ADMIN_PASSWORD=admin123
+      - PASSWORD_SALT=qr-entrance-salt-2025
+      - TOKEN_EXPIRY=24h
       - USE_DATABASE=true
       - BACKUP_ON_START=false
     volumes:

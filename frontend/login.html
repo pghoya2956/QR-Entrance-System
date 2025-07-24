@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>로그인 - QR 입장 관리 시스템</title>
+    <link rel="stylesheet" href="css/style.css?v=3.1.1">
+    <style>
+        /* 로그인 페이지 전용 스타일 */
+        body {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-hover));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .login-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            width: 100%;
+            max-width: 400px;
+            padding: 48px;
+            margin: 20px;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .login-logo {
+            width: 80px;
+            height: 80px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .login-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+        }
+
+        .login-form {
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 16px;
+            color: var(--text-primary);
+            background: white;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-input.error {
+            border-color: var(--error-color);
+        }
+
+        .form-error {
+            font-size: 14px;
+            color: var(--error-color);
+            margin-top: 8px;
+            display: none;
+        }
+
+        .form-error.show {
+            display: block;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 14px 24px;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            background: var(--text-tertiary);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .login-button.loading {
+            color: transparent;
+        }
+
+        .login-button.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-left: -10px;
+            margin-top: -10px;
+            border: 2px solid #ffffff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-footer {
+            text-align: center;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .system-info {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 1px solid var(--border-color);
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-tertiary);
+        }
+
+        /* 알림 메시지 */
+        .alert {
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--error-color);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+        }
+
+        .alert.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success-color);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        /* 모바일 반응형 */
+        @media (max-width: 480px) {
+            .login-container {
+                padding: 32px 24px;
+            }
+
+            .login-title {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <div class="login-logo">QR</div>
+            <h1 class="login-title">QR 입장 관리 시스템</h1>
+            <p class="login-subtitle">관리자 로그인</p>
+        </div>
+
+        <div class="alert error" id="errorAlert"></div>
+        <div class="alert success" id="successAlert"></div>
+
+        <form class="login-form" id="loginForm">
+            <div class="form-group">
+                <label class="form-label" for="password">비밀번호</label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="관리자 비밀번호를 입력하세요"
+                    autocomplete="current-password"
+                    required
+                >
+                <div class="form-error" id="passwordError">비밀번호를 입력해주세요</div>
+            </div>
+
+            <button type="submit" class="login-button" id="loginButton">
+                로그인
+            </button>
+        </form>
+
+        <div class="login-footer">
+            <p>비밀번호를 잊으셨나요? 시스템 관리자에게 문의하세요.</p>
+        </div>
+
+        <div class="system-info">
+            <p>QR Entrance System v3.4</p>
+            <p>© 2025 All rights reserved</p>
+        </div>
+    </div>
+
+    <script src="js/config/app-config.js?v=3.2.0"></script>
+    <script src="js/login.js?v=3.4.0"></script>
+</body>
+</html>

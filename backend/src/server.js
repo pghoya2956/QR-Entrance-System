@@ -1,11 +1,13 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 require('dotenv').config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+const config = require('./config/backend.config');
 
 // 데이터베이스 서비스 직접 사용
 const dataService = require('./services/dbService');
@@ -35,9 +37,32 @@ async function startServer() {
     // 데이터 서비스 초기화 완료까지 대기
     await initializeDataService();
     
-    app.use(cors());
+    app.use(cors(config.cors));
+    app.use(cookieParser());
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
+    
+    // Safari 쿠키 호환성을 위한 추가 설정
+    app.use((req, res, next) => {
+      // Safari에서 쿠키 전송을 위한 헤더
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      
+      // Origin 헤더가 있으면 동적으로 설정
+      if (req.headers.origin) {
+        res.setHeader('Access-Control-Allow-Origin', req.headers.origin);
+      }
+      
+      next();
+    });
+    
+    // 보안 헤더 설정
+    app.use((req, res, next) => {
+      res.setHeader('X-Content-Type-Options', 'nosniff');
+      res.setHeader('X-Frame-Options', 'DENY');
+      res.setHeader('X-XSS-Protection', '1; mode=block');
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+      next();
+    });
 
     // event_id 쿼리 파라미터를 req.eventId로 설정하는 미들웨어
     app.use((req, res, next) => {
@@ -45,8 +70,50 @@ async function startServer() {
       next();
     });
 
-    // 모든 이벤트 목록 조회 엔드포인트
-    app.get('/api/events', async (req, res) => {
+
+    // 헬스체크 엔드포인트
+    app.get('/api/health', (req, res) => {
+      const health = {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        dataService: 'SQLite',
+        event: {
+          id: EVENT_ID,
+          name: EVENT_NAME
+        }
+      };
+
+      // 백업 상태 추가
+      if (global.backupService) {
+        const backupStatus = global.backupService.getStatus();
+        health.backup = {
+          running: backupStatus.isRunning,
+          schedule: backupStatus.schedule,
+          backupDir: backupStatus.backupDir
+        };
+      }
+
+      res.json(health);
+    });
+
+    // 인증 라우트 (인증 불필요)
+    const authRoutes = require('./routes/auth');
+    app.use('/api/auth', authRoutes);
+
+    // 인증 미들웨어
+    const { authenticateToken } = require('./middleware/auth');
+
+    // API 라우트 (인증 필요)
+    const qrRoutes = require('./routes/qr');
+    const checkinRoutes = require('./routes/checkin');
+    const adminRoutes = require('./routes/admin');
+
+    app.use('/api/qr', authenticateToken, qrRoutes);
+    app.use('/api/checkin', authenticateToken, checkinRoutes);
+    app.use('/api/admin', authenticateToken, adminRoutes);
+    
+    // 이벤트 관련 API도 인증 필요
+    app.get('/api/events', authenticateToken, async (req, res) => {
       try {
         // DB에서 모든 고유 이벤트 조회
         const events = await new Promise((resolve, reject) => {
@@ -87,8 +154,8 @@ async function startServer() {
       }
     });
 
-    // 이벤트 정보 엔드포인트
-    app.get('/api/info', async (req, res) => {
+    // 이벤트 정보 엔드포인트도 인증 필요
+    app.get('/api/info', authenticateToken, async (req, res) => {
       try {
         // events 테이블에서 이벤트 정보 조회
         const eventInfo = await dataService.getAsync('SELECT name FROM events WHERE id = ?', [req.eventId]);
@@ -107,40 +174,6 @@ async function startServer() {
         res.status(500).json({ error: '이벤트 정보 조회 실패' });
       }
     });
-
-    // 헬스체크 엔드포인트
-    app.get('/api/health', (req, res) => {
-      const health = {
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        dataService: 'SQLite',
-        event: {
-          id: EVENT_ID,
-          name: EVENT_NAME
-        }
-      };
-
-      // 백업 상태 추가
-      if (global.backupService) {
-        const backupStatus = global.backupService.getStatus();
-        health.backup = {
-          running: backupStatus.isRunning,
-          schedule: backupStatus.schedule,
-          backupDir: backupStatus.backupDir
-        };
-      }
-
-      res.json(health);
-    });
-
-    // API 라우트만 제공 (정적 파일 서빙 제거)
-    const qrRoutes = require('./routes/qr');
-    const checkinRoutes = require('./routes/checkin');
-    const adminRoutes = require('./routes/admin');
-
-    app.use('/api/qr', qrRoutes);
-    app.use('/api/checkin', checkinRoutes);
-    app.use('/api/admin', adminRoutes);
 
     // 루트 경로 접근 시 API 정보 반환
     app.get('/', (req, res) => {

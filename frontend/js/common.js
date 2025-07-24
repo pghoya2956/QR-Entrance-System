@@ -12,11 +12,78 @@ let availableEvents = [];
 // API 기본 URL
 const API_BASE_URL = '/api';
 
+// 인증 토큰 가져오기
+function getAuthToken() {
+    return localStorage.getItem('authToken');
+}
+
+// API 요청에 인증 헤더 추가
+async function fetchWithAuth(url, options = {}) {
+    const token = getAuthToken();
+    
+    const headers = {
+        ...options.headers,
+        'Authorization': token ? `Bearer ${token}` : undefined
+    };
+    
+    const response = await fetch(url, {
+        ...options,
+        headers,
+        credentials: 'include'
+    });
+    
+    // 401 에러시 로그인 페이지로 리다이렉션
+    if (response.status === 401) {
+        const currentPath = window.location.pathname + window.location.search;
+        window.location.href = `/login.html?returnUrl=${encodeURIComponent(currentPath)}`;
+        return;
+    }
+    
+    return response;
+}
+
+// 인증 상태 체크
+async function checkAuth() {
+    try {
+        const response = await fetchWithAuth('/api/auth/check');
+        if (!response || !response.ok) {
+            throw new Error('Unauthorized');
+        }
+        const data = await response.json();
+        return data.authenticated;
+    } catch (error) {
+        return false;
+    }
+}
+
+// 로그아웃
+async function logout() {
+    try {
+        const response = await fetchWithAuth('/api/auth/logout', {
+            method: 'POST'
+        });
+        
+        if (response && response.ok) {
+            // 토큰 삭제
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('selectedEventId');
+            
+            // 로그인 페이지로 리다이렉션
+            window.location.href = '/login.html';
+        }
+    } catch (error) {
+        console.error('로그아웃 실패:', error);
+        // 에러가 발생해도 로그인 페이지로 이동
+        localStorage.removeItem('authToken');
+        window.location.href = '/login.html';
+    }
+}
+
 // 이벤트 목록 가져오기
 async function fetchEvents() {
     try {
-        const response = await fetch(`${API_BASE_URL}/events`);
-        if (!response.ok) throw new Error('Failed to fetch events');
+        const response = await fetchWithAuth(`${API_BASE_URL}/events`);
+        if (!response || !response.ok) throw new Error('Failed to fetch events');
         
         availableEvents = await response.json();
         console.log('✅ 이벤트 목록:', availableEvents);
@@ -98,7 +165,7 @@ const api = {
     // 참가자 목록 가져오기
     async getAttendees() {
         try {
-            const response = await fetch(getApiUrl('/admin/attendees'));
+            const response = await fetchWithAuth(getApiUrl('/admin/attendees'));
             if (!response.ok) throw new Error('Failed to fetch attendees');
             return await response.json();
         } catch (error) {
@@ -115,7 +182,7 @@ const api = {
     // 통계 가져오기
     async getStats() {
         try {
-            const response = await fetch(getApiUrl('/admin/stats'));
+            const response = await fetchWithAuth(getApiUrl('/admin/stats'));
             if (!response.ok) throw new Error('Failed to fetch stats');
             return await response.json();
         } catch (error) {
@@ -132,7 +199,7 @@ const api = {
     // 체크인 토글
     async toggleCheckin(registrationNumber) {
         try {
-            const response = await fetch(getApiUrl(`/admin/attendee/${registrationNumber}/toggle-checkin`), {
+            const response = await fetchWithAuth(getApiUrl(`/admin/attendee/${registrationNumber}/toggle-checkin`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -149,7 +216,7 @@ const api = {
     // QR 체크인 검증
     async verifyCheckin(qrData) {
         try {
-            const response = await fetch(getApiUrl('/checkin/verify'), {
+            const response = await fetchWithAuth(getApiUrl('/checkin/verify'), {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -180,7 +247,7 @@ const api = {
     // CSV 다운로드
     async downloadCSV() {
         try {
-            const response = await fetch(getApiUrl('/admin/export-csv'));
+            const response = await fetchWithAuth(getApiUrl('/admin/export-csv'));
             if (!response.ok) throw new Error('Failed to download CSV');
             
             const blob = await response.blob();
@@ -202,7 +269,7 @@ const api = {
     // 이벤트 정보 가져오기
     async getEventInfo() {
         try {
-            const response = await fetch(getApiUrl('/info'));
+            const response = await fetchWithAuth(getApiUrl('/info'));
             if (!response.ok) throw new Error('Failed to fetch event info');
             return await response.json();
         } catch (error) {
@@ -217,7 +284,7 @@ const api = {
             const formData = new FormData();
             formData.append('file', file);
             
-            const response = await fetch(getApiUrl('/admin/import-csv'), {
+            const response = await fetchWithAuth(getApiUrl('/admin/import-csv'), {
                 method: 'POST',
                 body: formData
             });
@@ -233,7 +300,7 @@ const api = {
     // 참가자 수정
     async updateAttendee(registrationNumber, updates) {
         try {
-            const response = await fetch(getApiUrl(`/admin/attendees/${registrationNumber}`), {
+            const response = await fetchWithAuth(getApiUrl(`/admin/attendees/${registrationNumber}`), {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -256,7 +323,7 @@ const api = {
     // 참가자 삭제
     async deleteAttendee(registrationNumber) {
         try {
-            const response = await fetch(getApiUrl(`/admin/attendees/${registrationNumber}`), {
+            const response = await fetchWithAuth(getApiUrl(`/admin/attendees/${registrationNumber}`), {
                 method: 'DELETE'
             });
             
@@ -394,6 +461,14 @@ function debounce(func, wait) {
 // 이벤트 선택 초기화
 async function initializeEventSelection() {
     try {
+        // 인증 상태 확인
+        const isAuthenticated = await checkAuth();
+        if (!isAuthenticated) {
+            const currentPath = window.location.pathname + window.location.search;
+            window.location.href = `/login.html?returnUrl=${encodeURIComponent(currentPath)}`;
+            return false;
+        }
+        
         // 이벤트 목록 가져오기
         await fetchEvents();
         
@@ -535,3 +610,41 @@ async function initializeEvents() {
         return false;
     }
 }
+
+// 헤더 초기화 함수
+function initializeHeader() {
+    // 페이지 헤더에 사용자 정보와 로그아웃 버튼 추가
+    const headerActions = document.querySelector('.header-actions');
+    if (headerActions && !headerActions.querySelector('.header-user')) {
+        const userDropdownHTML = `
+            <div class="header-user dropdown">
+                <div class="header-user-avatar">관</div>
+                <div class="header-user-info">
+                    <div class="header-user-name">관리자</div>
+                    <div class="header-user-role">Administrator</div>
+                </div>
+                <div class="dropdown-menu">
+                    <a href="#" onclick="logout(); return false;" class="dropdown-item">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+                        </svg>
+                        로그아웃
+                    </a>
+                </div>
+            </div>
+        `;
+        
+        // 알림 버튼이 있으면 그 다음에, 없으면 맨 끝에 추가
+        const notificationBtn = headerActions.querySelector('.header-notification-btn');
+        if (notificationBtn) {
+            notificationBtn.insertAdjacentHTML('afterend', userDropdownHTML);
+        } else {
+            headerActions.insertAdjacentHTML('beforeend', userDropdownHTML);
+        }
+    }
+}
+
+// DOM 로드 시 헤더 초기화
+document.addEventListener('DOMContentLoaded', function() {
+    initializeHeader();
+});
