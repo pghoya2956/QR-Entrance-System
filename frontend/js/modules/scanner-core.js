@@ -233,6 +233,28 @@ class ScannerCore {
                     this.onScanFailure
                 );
                 
+                // 카메라가 실제로 전환되었는지 확인
+                setTimeout(() => {
+                    const video = document.querySelector('#reader video');
+                    if (video && video.srcObject) {
+                        const tracks = video.srcObject.getVideoTracks();
+                        if (tracks.length > 0) {
+                            const activeTrack = tracks[0];
+                            const settings = activeTrack.getSettings();
+                            console.log('[ScannerCore] 활성 비디오 트랙:', {
+                                label: activeTrack.label,
+                                deviceId: settings.deviceId,
+                                요청한카메라: this.currentCameraId
+                            });
+                            
+                            // 요청한 카메라와 실제 카메라가 다른 경우 경고
+                            if (settings.deviceId !== this.currentCameraId) {
+                                console.warn('[ScannerCore] ⚠️ 카메라 전환 실패! 요청한 카메라와 실제 카메라가 다릅니다.');
+                            }
+                        }
+                    }
+                }, 1000);
+                
                 this.isScanning = true;
                 this.updateStatus('QR 코드를 스캔해주세요');
                 this.updateCameraButton(true);
@@ -285,6 +307,8 @@ class ScannerCore {
         
         try {
             await this.html5QrCode.stop();
+            // 완전히 정리하기 위해 clear 메서드도 호출
+            await this.html5QrCode.clear();
             this.html5QrCode = null;
             this.isScanning = false;
             this.updateStatus('스캐너가 중지되었습니다');
@@ -316,7 +340,9 @@ class ScannerCore {
                 videoConstraints: {
                     facingMode: "environment",
                     width: { ideal: 1920 },
-                    height: { ideal: 1080 }
+                    height: { ideal: 1080 },
+                    // deviceId를 명시적으로 지정
+                    deviceId: this.currentCameraId ? { exact: this.currentCameraId } : undefined
                 },
                 experimentalFeatures: {
                     useBarCodeDetectorIfSupported: true
@@ -340,7 +366,9 @@ class ScannerCore {
             qrbox: config.qrbox,
             aspectRatio: config.aspectRatio,
             videoConstraints: {
-                facingMode: "environment"
+                facingMode: "environment",
+                // deviceId를 명시적으로 지정
+                deviceId: this.currentCameraId ? { exact: this.currentCameraId } : undefined
             },
             experimentalFeatures: {
                 useBarCodeDetectorIfSupported: true
@@ -725,9 +753,13 @@ class ScannerCore {
     
     // 카메라 전환
     async switchCamera(cameraId) {
-        if (!cameraId || cameraId === this.currentCameraId) return;
+        if (!cameraId || cameraId === this.currentCameraId) {
+            console.log('[ScannerCore] 카메라 전환 중단 - 동일한 카메라 또는 ID 없음');
+            return;
+        }
         
         console.log('[ScannerCore] 카메라 전환 시작:', cameraId);
+        console.log('[ScannerCore] 현재 카메라 ID:', this.currentCameraId);
         
         // 선택된 카메라 정보 확인
         const selectedCamera = this.cameras.find(cam => cam.id === cameraId);
@@ -736,20 +768,37 @@ class ScannerCore {
         try {
             // 현재 스캐너 중지
             if (this.isScanning) {
+                console.log('[ScannerCore] 기존 스캐너 중지 중...');
                 await this.stopScanner();
+                // 약간의 지연 추가
+                await new Promise(resolve => setTimeout(resolve, 500));
             }
             
             // 새 카메라로 설정
             this.currentCameraId = cameraId;
-            console.log('[ScannerCore] 새 카메라 ID 설정:', this.currentCameraId);
+            console.log('[ScannerCore] 새 카메라 ID 설정 완료:', this.currentCameraId);
+            
+            // 카메라 선택 드롭다운 업데이트
+            const cameraSelect = document.getElementById('cameraSelect');
+            if (cameraSelect) {
+                cameraSelect.value = cameraId;
+                console.log('[ScannerCore] 드롭다운 업데이트 완료');
+            }
             
             // 스캐너 재시작
+            console.log('[ScannerCore] 새 카메라로 스캐너 시작 중...');
             await this.startScanner();
             
             console.log('[ScannerCore] 카메라 전환 완료');
         } catch (err) {
             console.error('[ScannerCore] 카메라 전환 오류:', err);
-            this.updateStatus('카메라 전환 실패');
+            this.updateStatus('카메라 전환 실패: ' + err.message);
+            
+            // 실패 시 이전 카메라로 복구 시도
+            if (this.cameras.length > 0) {
+                this.currentCameraId = this.cameras[0].id;
+                await this.startScanner();
+            }
         }
     }
 }
@@ -773,3 +822,108 @@ window.setFrameState = (state) => scannerCore.setFrameState(state);
 window.getIsScanning = () => scannerCore.isScanning;
 window.getIsFullscreen = () => scannerCore.isFullscreen;
 window.getHtml5QrCode = () => scannerCore.html5QrCode;
+
+// 카메라 정보 확인 함수
+window.getCameraInfo = async () => {
+    try {
+        const cameras = await Html5Qrcode.getCameras();
+        console.log(`[카메라 정보] 총 ${cameras.length}개의 카메라 발견`);
+        console.log('=====================================');
+        
+        cameras.forEach((camera, index) => {
+            console.log(`카메라 ${index + 1}:`);
+            console.log(`  - ID: ${camera.id}`);
+            console.log(`  - Label: ${camera.label || '(이름 없음)'}`);
+            console.log(`  - Device ID 길이: ${camera.id.length}자`);
+            console.log('-------------------------------------');
+        });
+        
+        // 현재 선택된 카메라
+        if (scannerCore.currentCameraId) {
+            const currentCamera = cameras.find(cam => cam.id === scannerCore.currentCameraId);
+            console.log('\n[현재 선택된 카메라]');
+            console.log(`  - ID: ${scannerCore.currentCameraId}`);
+            console.log(`  - Label: ${currentCamera ? currentCamera.label : '알 수 없음'}`);
+        }
+        
+        // 브라우저 정보
+        console.log('\n[브라우저 정보]');
+        console.log(`  - User Agent: ${navigator.userAgent}`);
+        console.log(`  - 브라우저: ${/Chrome/.test(navigator.userAgent) ? 'Chrome' : /Safari/.test(navigator.userAgent) ? 'Safari' : 'Other'}`);
+        
+        return cameras;
+    } catch (error) {
+        console.error('[카메라 정보 오류]', error);
+        return [];
+    }
+};
+
+// 현재 사용 중인 비디오 스트림 정보 확인
+window.getActiveVideoStream = () => {
+    const videoElements = document.querySelectorAll('#reader video');
+    console.log(`[비디오 요소] 총 ${videoElements.length}개 발견`);
+    
+    videoElements.forEach((video, index) => {
+        console.log(`\n비디오 ${index + 1}:`);
+        console.log(`  - 크기: ${video.videoWidth}x${video.videoHeight}`);
+        console.log(`  - 준비 상태: ${video.readyState}`);
+        console.log(`  - 재생 중: ${!video.paused}`);
+        
+        if (video.srcObject && video.srcObject.getVideoTracks) {
+            const tracks = video.srcObject.getVideoTracks();
+            tracks.forEach((track, trackIndex) => {
+                console.log(`  - 트랙 ${trackIndex + 1}:`);
+                console.log(`    - Label: ${track.label}`);
+                console.log(`    - ID: ${track.id}`);
+                console.log(`    - 활성화: ${track.enabled}`);
+                console.log(`    - 준비 상태: ${track.readyState}`);
+                
+                const settings = track.getSettings();
+                console.log(`    - 설정:`, settings);
+            });
+        }
+    });
+    
+    // html5-qrcode 내부 상태 확인
+    if (scannerCore.html5QrCode) {
+        console.log('\n[Html5QrCode 상태]');
+        console.log(`  - 스캔 중: ${scannerCore.isScanning}`);
+        console.log(`  - 현재 카메라 ID: ${scannerCore.currentCameraId}`);
+    }
+};
+
+// 수동으로 카메라 전환 테스트
+window.testCameraSwitch = async (targetCamera) => {
+    const cameras = await Html5Qrcode.getCameras();
+    console.log('\n[카메라 전환 테스트]');
+    console.log('사용 가능한 카메라:');
+    cameras.forEach((cam, idx) => {
+        console.log(`${idx + 1}. ${cam.label} (${cam.id.substring(0, 10)}...)`);
+    });
+    
+    let targetId;
+    if (typeof targetCamera === 'number') {
+        targetId = cameras[targetCamera - 1]?.id;
+    } else if (targetCamera === 'iphone') {
+        const iphone = cameras.find(cam => 
+            cam.label.toLowerCase().includes('iphone') || 
+            cam.label.toLowerCase().includes('continuity')
+        );
+        targetId = iphone?.id;
+    } else if (targetCamera === 'facetime') {
+        const facetime = cameras.find(cam => 
+            cam.label.toLowerCase().includes('facetime')
+        );
+        targetId = facetime?.id;
+    } else {
+        targetId = targetCamera;
+    }
+    
+    if (!targetId) {
+        console.error('대상 카메라를 찾을 수 없습니다.');
+        return;
+    }
+    
+    console.log(`\n${targetId}로 전환 시도...`);
+    await scannerCore.switchCamera(targetId);
+};
