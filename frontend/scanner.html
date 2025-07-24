@@ -161,6 +161,8 @@
                         <div class="scanner-container">
                             <div class="reader-wrapper">
                                 <div id="reader"></div>
+                                <!-- 일반 모드 스캔 결과 오버레이 -->
+                                <div class="scanner-overlay-result" id="scannerOverlayResult"></div>
                                 <div class="scanner-frame-overlay">
                                     <div class="scanner-frame-corners">
                                         <div class="frame-corner top-left"></div>
@@ -279,6 +281,74 @@
             background: #000;
             border-radius: 12px;
             overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        /* 스캐너 영역 체크인 효과 */
+        #reader.scan-success {
+            box-shadow: 0 0 0 4px #10b981;
+            background: rgba(16, 185, 129, 0.05);
+        }
+        
+        #reader.scan-error {
+            box-shadow: 0 0 0 4px #ef4444;
+            background: rgba(239, 68, 68, 0.05);
+        }
+        
+        #reader.scan-warning {
+            box-shadow: 0 0 0 4px #f59e0b;
+            background: rgba(245, 158, 11, 0.05);
+        }
+        
+        /* 일반 모드 스캔 결과 오버레이 */
+        .scanner-overlay-result {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.8);
+            background: rgba(255, 255, 255, 0.95);
+            padding: 30px 50px;
+            border-radius: 16px;
+            font-size: 24px;
+            font-weight: 600;
+            text-align: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            white-space: nowrap;
+        }
+        
+        .scanner-overlay-result.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+        
+        .scanner-overlay-result.success {
+            color: #10b981;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #10b981;
+        }
+        
+        .scanner-overlay-result.error {
+            color: #ef4444;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #ef4444;
+        }
+        
+        .scanner-overlay-result.warning {
+            color: #f59e0b;
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #f59e0b;
+        }
+        
+        .scanner-overlay-result small {
+            display: block;
+            font-size: 16px;
+            font-weight: 400;
+            margin-top: 8px;
+            opacity: 0.8;
         }
         
         /* Html5Qrcode 라이브러리의 기본 스타일 오버라이드 */
@@ -699,17 +769,20 @@
         }
         
         .overlay-result.success {
-            color: #ffffff;  /* 텍스트도 흰색 */
+            color: #10b981;
+            background: rgba(16, 185, 129, 0.1);
             border: 3px solid #10b981;
         }
         
         .overlay-result.error {
             color: #ef4444;
+            background: rgba(239, 68, 68, 0.1);
             border: 3px solid #ef4444;
         }
         
         .overlay-result.warning {
             color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
             border: 3px solid #f59e0b;
         }
         

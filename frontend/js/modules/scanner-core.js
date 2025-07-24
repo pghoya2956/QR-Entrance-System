@@ -483,11 +483,27 @@ class ScannerCore {
             <div class="scan-time">스캔 시간: ${scanTime}</div>
         `;
         
-        this.setFrameState(type === 'warning' ? 'detecting' : type);
+        // 스캐너 영역에도 시각적 피드백 추가
+        const reader = document.getElementById('reader');
+        if (reader) {
+            reader.classList.add(`scan-${type}`);
+            
+            setTimeout(() => {
+                reader.classList.remove(`scan-${type}`);
+            }, 3000);
+        }
         
-        setTimeout(() => {
-            this.setFrameState('');
-        }, 1000);
+        // 일반 모드에서도 오버레이 표시
+        const scannerOverlay = document.getElementById('scannerOverlayResult');
+        if (scannerOverlay) {
+            scannerOverlay.innerHTML = message;
+            scannerOverlay.className = `scanner-overlay-result ${type}`;
+            scannerOverlay.classList.add('show');
+            
+            setTimeout(() => {
+                scannerOverlay.classList.remove('show');
+            }, 3000);
+        }
         
         // 결과를 계속 표시 (자동 숨김 제거)
     }
@@ -503,9 +519,14 @@ class ScannerCore {
         const flash = document.getElementById('fullscreenFlash');
         flash.className = `fullscreen-flash ${type}`;
         
+        // 플래시 효과를 먼저 페이드아웃 (2.5초 후)
+        setTimeout(() => {
+            flash.className = 'fullscreen-flash';
+        }, 2500);
+        
+        // 오버레이 메시지를 나중에 숨김 (3초 후)
         setTimeout(() => {
             overlay.classList.remove('show');
-            flash.className = 'fullscreen-flash';
         }, 3000);
     }
     
